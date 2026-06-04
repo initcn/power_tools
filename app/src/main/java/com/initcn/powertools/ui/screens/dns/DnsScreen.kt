@@ -1,5 +1,6 @@
 package com.initcn.powertools.ui.screens.dns
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,9 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -26,7 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.initcn.powertools.R
+import com.initcn.powertools.data.AppPreferences
 import com.initcn.powertools.features.dns.DnsManager
+import com.initcn.powertools.model.CustomDnsProvider
 import com.initcn.powertools.model.DnsProvider
 import com.initcn.powertools.permissions.PermissionChecker
 import com.initcn.powertools.ui.components.PowerToolScaffold
@@ -44,22 +51,7 @@ fun DnsScreen() {
             context
         )
 
-    val dnsSwitcherTitle =
-        stringResource(R.string.dns_switcher)
-
-    val customDnsHostnameLabel =
-        stringResource(R.string.custom_dns_hostname)
-
-    val applyDnsText =
-        stringResource(R.string.apply_dns)
-
-    val dnsApplyFailedText =
-        stringResource(R.string.dns_apply_failed)
-
-    val dnsAppliedTemplate =
-        stringResource(R.string.dns_applied)
-
-    var selectedProvider by remember {
+    var selectedProvider by rememberSaveable {
         mutableStateOf(
             DnsProvider.AUTOMATIC
         )
@@ -72,6 +64,17 @@ fun DnsScreen() {
     var statusMessage by rememberSaveable {
         mutableStateOf<String?>(null)
     }
+
+    var savedProviders by remember {
+        mutableStateOf(
+            emptyList<CustomDnsProvider>()
+        )
+    }
+
+    val dnsApplyFailed =
+        stringResource(
+            R.string.dns_apply_failed
+        )
 
     LaunchedEffect(Unit) {
 
@@ -90,10 +93,18 @@ fun DnsScreen() {
                     context
                 ) ?: ""
         }
+
+        savedProviders =
+            AppPreferences
+                .getCustomDnsProviders(
+                    context
+                )
     }
 
     PowerToolScaffold(
-        title = dnsSwitcherTitle
+        title = stringResource(
+            R.string.dns_switcher
+        )
     ) { paddingValues ->
 
         Column(
@@ -104,28 +115,34 @@ fun DnsScreen() {
                 .verticalScroll(
                     rememberScrollState()
                 ),
-            verticalArrangement = Arrangement.spacedBy(
-                Dimens.MD
-            )
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    Dimens.MD
+                )
         ) {
 
             Text(
                 text = stringResource(
                     R.string.dns_description
                 ),
-                style = MaterialTheme.typography.bodyLarge
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodyLarge
             )
 
             if (!hasWriteSecureSettings) {
 
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier =
+                        Modifier.fillMaxWidth()
                 ) {
 
                     Column(
-                        modifier = Modifier.padding(
-                            Dimens.MD
-                        ),
+                        modifier =
+                            Modifier.padding(
+                                Dimens.MD
+                            ),
                         verticalArrangement =
                             Arrangement.spacedBy(
                                 Dimens.SM
@@ -133,7 +150,9 @@ fun DnsScreen() {
                     ) {
 
                         Text(
-                            text = "ADB Permission Required",
+                            text = stringResource(
+                                R.string.adb_permission_required
+                            ),
                             style =
                                 MaterialTheme
                                     .typography
@@ -141,7 +160,9 @@ fun DnsScreen() {
                         )
 
                         Text(
-                            text = "Grant WRITE_SECURE_SETTINGS before using DNS controls.",
+                            text = stringResource(
+                                R.string.dns_permission_description
+                            ),
                             style =
                                 MaterialTheme
                                     .typography
@@ -149,7 +170,9 @@ fun DnsScreen() {
                         )
 
                         Text(
-                            text = "adb shell pm grant com.initcn.powertools android.permission.WRITE_SECURE_SETTINGS",
+                            text = stringResource(
+                                R.string.adb_grant_command
+                            ),
                             style =
                                 MaterialTheme
                                     .typography
@@ -160,71 +183,76 @@ fun DnsScreen() {
             }
 
             Card(
-                modifier = Modifier.fillMaxWidth()
+                modifier =
+                    Modifier.fillMaxWidth()
             ) {
 
                 Column {
 
-                    DnsProvider.entries.forEach { provider ->
+                    DnsProvider.entries
+                        .forEach { provider ->
 
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text =
-                                        provider.title
-                                )
-                            },
+                            ListItem(
+                                headlineContent = {
 
-                            supportingContent = {
+                                    Text(
+                                        text =
+                                            provider.title
+                                    )
+                                },
 
-                                when {
+                                supportingContent = {
 
-                                    provider.hostname != null -> {
+                                    when {
 
-                                        Text(
-                                            text =
-                                                provider.hostname
-                                        )
-                                    }
+                                        provider.hostname != null -> {
 
-                                    provider ==
-                                            DnsProvider.OFF -> {
-
-                                        Text(
-                                            text = stringResource(
-                                                R.string.disable_private_dns
+                                            Text(
+                                                text =
+                                                    provider.hostname
                                             )
-                                        )
-                                    }
+                                        }
 
-                                    provider ==
-                                            DnsProvider.AUTOMATIC -> {
+                                        provider ==
+                                                DnsProvider.OFF -> {
 
-                                        Text(
-                                            text = stringResource(
-                                                R.string.automatic_dns_mode
+                                            Text(
+                                                text =
+                                                    stringResource(
+                                                        R.string.disable_private_dns
+                                                    )
                                             )
-                                        )
+                                        }
+
+                                        provider ==
+                                                DnsProvider.AUTOMATIC -> {
+
+                                            Text(
+                                                text =
+                                                    stringResource(
+                                                        R.string.automatic_dns_mode
+                                                    )
+                                            )
+                                        }
                                     }
+                                },
+
+                                leadingContent = {
+
+                                    RadioButton(
+                                        selected =
+                                            selectedProvider ==
+                                                    provider,
+
+                                        onClick = {
+
+                                            selectedProvider =
+                                                provider
+                                        }
+                                    )
                                 }
-                            },
-
-                            leadingContent = {
-
-                                RadioButton(
-                                    selected =
-                                        selectedProvider ==
-                                                provider,
-
-                                    onClick = {
-
-                                        selectedProvider =
-                                            provider
-                                    }
-                                )
-                            }
-                        )
-                    }
+                            )
+                        }
                 }
             }
 
@@ -244,14 +272,18 @@ fun DnsScreen() {
                         Modifier.fillMaxWidth(),
 
                     label = {
+
                         Text(
-                            customDnsHostnameLabel
+                            stringResource(
+                                R.string.custom_dns_hostname
+                            )
                         )
                     },
 
                     placeholder = {
+
                         Text(
-                            text = stringResource(
+                            stringResource(
                                 R.string.custom_dns_placeholder
                             )
                         )
@@ -259,6 +291,92 @@ fun DnsScreen() {
 
                     singleLine = true
                 )
+
+                if (
+                    savedProviders.isNotEmpty()
+                ) {
+
+                    Text(
+                        text = stringResource(
+                            R.string.saved_dns_providers
+                        ),
+                        style =
+                            MaterialTheme
+                                .typography
+                                .titleMedium
+                    )
+
+                    Card(
+                        modifier =
+                            Modifier.fillMaxWidth()
+                    ) {
+
+                        Column {
+
+                            savedProviders
+                                .forEach { provider ->
+
+                                    ListItem(
+                                        headlineContent = {
+
+                                            Text(
+                                                provider.name
+                                            )
+                                        },
+
+                                        supportingContent = {
+
+                                            Text(
+                                                provider.hostname
+                                            )
+                                        },
+
+                                        trailingContent = {
+
+                                            IconButton(
+                                                onClick = {
+
+                                                    AppPreferences
+                                                        .removeCustomDnsProvider(
+                                                            context,
+                                                            provider.id
+                                                        )
+
+                                                    savedProviders =
+                                                        AppPreferences
+                                                            .getCustomDnsProviders(
+                                                                context
+                                                            )
+                                                }
+                                            ) {
+
+                                                Icon(
+                                                    imageVector =
+                                                        Icons.Default.Close,
+                                                    contentDescription =
+                                                        stringResource(
+                                                            R.string.delete
+                                                        )
+                                                )
+                                            }
+                                        },
+
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+
+                                                    customHostname =
+                                                        provider.hostname
+
+                                                    selectedProvider =
+                                                        DnsProvider.CUSTOM
+                                                }
+                                    )
+                                }
+                        }
+                    }
+                }
             }
 
             StatusMessage(
@@ -266,40 +384,73 @@ fun DnsScreen() {
             )
 
             Button(
-                modifier = Modifier.fillMaxWidth(),
-                enabled = hasWriteSecureSettings,
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                enabled =
+                    hasWriteSecureSettings,
 
                 onClick = {
 
+                    val hostname =
+                        customHostname
+                            .trim()
+
                     val success =
                         DnsManager.apply(
-                            context = context,
+                            context =
+                                context,
+
                             provider =
                                 selectedProvider,
+
                             customHostname =
-                                customHostname
-                                    .trim()
-                                    .takeIf {
-                                        it.isNotBlank()
-                                    }
+                                hostname.takeIf {
+                                    it.isNotBlank()
+                                }
                         )
 
                     statusMessage =
                         if (success) {
 
-                            dnsAppliedTemplate.format(
+                            if (
+                                selectedProvider ==
+                                DnsProvider.CUSTOM &&
+                                hostname.isNotBlank()
+                            ) {
+
+                                AppPreferences
+                                    .addCustomDnsProviderIfMissing(
+                                        context,
+                                        CustomDnsProvider(
+                                            name = hostname,
+                                            hostname = hostname
+                                        )
+                                    )
+
+                                savedProviders =
+                                    AppPreferences
+                                        .getCustomDnsProviders(
+                                            context
+                                        )
+                            }
+
+                            context.getString(
+                                R.string.dns_applied,
                                 selectedProvider.title
                             )
 
                         } else {
 
-                            dnsApplyFailedText
+                            dnsApplyFailed
                         }
                 }
             ) {
 
                 Text(
-                    text = applyDnsText
+                    text = stringResource(
+                        R.string.apply_dns
+                    )
                 )
             }
         }

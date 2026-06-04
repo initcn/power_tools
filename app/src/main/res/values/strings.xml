@@ -18,6 +18,11 @@
     <string name="disable_private_dns">Disable Private DNS</string>
     <string name="automatic_dns_mode">Use Android automatic mode</string>
 
+    <string name="saved_dns_providers">Saved DNS Providers</string>
+    <string name="delete">Delete</string>
+    <string name="adb_permission_required">ADB Permission Required</string>
+    <string name="dns_permission_description">Grant WRITE_SECURE_SETTINGS before using DNS controls.</string>
+    <string name="adb_grant_command">adb shell pm grant com.initcn.powertools android.permission.WRITE_SECURE_SETTINGS</string>
     <!-- Doze -->
     <string name="screen_doze">Screen Doze</string>
     <string name="screen_timeout_description">Select a screen timeout duration.</string>

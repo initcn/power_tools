@@ -2,6 +2,7 @@ package com.initcn.powertools.features.dns
 
 import android.content.Context
 import android.provider.Settings
+import com.initcn.powertools.data.AppPreferences
 import com.initcn.powertools.model.DnsProvider
 
 object DnsManager {
@@ -13,6 +14,7 @@ object DnsManager {
         "private_dns_specifier"
 
     private val knownProviders by lazy {
+
         DnsProvider.entries
             .filter {
                 !it.hostname.isNullOrBlank()
@@ -72,7 +74,7 @@ object DnsManager {
     }
 
     /**
-     * Returns custom hostname if active.
+     * Returns active hostname.
      */
     fun getCustomHostname(
         context: Context
@@ -95,7 +97,9 @@ object DnsManager {
      * Apply DNS provider.
      *
      * Requires:
-     * adb shell pm grant com.initcn.powertools android.permission.WRITE_SECURE_SETTINGS
+     * adb shell pm grant
+     * com.initcn.powertools
+     * android.permission.WRITE_SECURE_SETTINGS
      */
     fun apply(
         context: Context,
@@ -161,6 +165,12 @@ object DnsManager {
                         PRIVATE_DNS_SPECIFIER,
                         hostname
                     )
+
+                    AppPreferences
+                        .setLastDnsProvider(
+                            context,
+                            DnsProvider.CUSTOM.name
+                        )
                 }
 
                 else -> {
@@ -176,6 +186,12 @@ object DnsManager {
                         PRIVATE_DNS_SPECIFIER,
                         provider.hostname
                     )
+
+                    AppPreferences
+                        .setLastDnsProvider(
+                            context,
+                            provider.name
+                        )
                 }
             }
 
