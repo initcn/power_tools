@@ -1,0 +1,51 @@
+<resources>
+
+    <!-- App -->
+    <string name="app_name">Power Tools</string>
+
+    <!-- Home -->
+    <string name="home_title">Utilities</string>
+    <string name="home_subtitle">Useful Android power tools.</string>
+
+    <!-- DNS -->
+    <string name="dns_switcher">DNS Switcher</string>
+    <string name="dns_description">Switch Android Private DNS providers instantly.</string>
+    <string name="apply_dns">Apply DNS</string>
+    <string name="dns_applied">%1$s applied.</string>
+    <string name="dns_apply_failed">Failed to apply DNS settings.</string>
+    <string name="custom_dns_hostname">Custom DNS Hostname</string>
+    <string name="custom_dns_placeholder">dns.example.com</string>
+    <string name="disable_private_dns">Disable Private DNS</string>
+    <string name="automatic_dns_mode">Use Android automatic mode</string>
+
+    <!-- Doze -->
+    <string name="screen_doze">Screen Doze</string>
+    <string name="screen_timeout_description">Select a screen timeout duration.</string>
+    <string name="apply_timeout">Apply Timeout</string>
+    <string name="timeout_success">Timeout applied successfully.</string>
+    <string name="timeout_failed">Failed to apply timeout.</string>
+    <string name="grant_modify_settings">Grant Modify System Settings permission first.</string>
+
+    <!-- Downloads -->
+    <string name="downloads_organizer">Downloads Organizer</string>
+    <string name="downloads_description">Organize files in Downloads into category folders.</string>
+    <string name="preview_changes">Preview Changes</string>
+    <string name="organize_downloads">Organize Downloads</string>
+    <string name="grant_files_access">Grant All Files Access first.</string>
+    <string name="downloads_no_files">No files found in Downloads.</string>
+    <string name="downloads_files_ready">%1$d files ready to organize.</string>
+    <string name="files_moved">Moved %1$d files.</string>
+    <string name="all_remaining_file_types">All remaining file types</string>
+
+    <!-- Permissions -->
+    <string name="powertools_setup">PowerTools Setup</string>
+    <string name="grant_permissions">Grant the permissions required by the features you want to use.</string>
+    <string name="required_permissions">Required Permissions</string>
+    <string name="optional_features">Optional Features</string>
+    <string name="optional_permissions_description">These permissions unlock additional functionality but are not required to use the app.</string>
+    <string name="copy_adb_command">Copy ADB Command</string>
+    <string name="adb_command_copied">ADB command copied.</string>
+    <string name="tap_open_settings">Tap to open Android Settings.</string>
+    <string name="tap_grant_files_access">Tap to grant Full Files Access.</string>
+
+</resources>
