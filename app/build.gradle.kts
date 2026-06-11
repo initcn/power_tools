@@ -2,11 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.com.google.devtools.ksp)
+    id("com.google.dagger.hilt.android")
 }
 
 android {
     namespace = "com.initcn.powertools"
-    compileSdk = 37
+    compileSdk = 37 // Note: Double-check if API 37 is intended. The current stable is 34/35.
 
     defaultConfig {
         applicationId = "com.initcn.powertools"
@@ -25,12 +26,17 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // ADDED: This forces the release APK to ONLY include 64-bit ARM libraries.
+            // Debug builds will still include x86 so your Emulators won't crash.
+            ndk {
+                abiFilters.add("arm64-v8a")
+            }
         }
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -51,41 +57,60 @@ android {
     }
 }
 
+// Keep this if you are actively fixing a dependency conflict between Room/Hilt
+configurations.all {
+    resolutionStrategy {
+        force(libs.kotlin.metadata.jvm)
+    }
+}
+
 dependencies {
+    // --- Core AndroidX ---
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.biometric)
+
+    // --- Compose UI ---
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
 
-    implementation(libs.androidx.core.ktx)
+    // --- Lifecycle & Navigation ---
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
 
-    implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.gson)
-    implementation(libs.androidx.biometric)
+    // --- Dependency Injection (Hilt) ---
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
-    implementation(libs.zetetic.sqlcipher)
-
-    // Room Database
+    // --- Database (Room & SQLCipher) ---
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    implementation(libs.zetetic.sqlcipher)
 
-    implementation(libs.androidx.fragment.ktx)
-    implementation(libs.androidx.activity.compose.v182)
+    // --- Data & Utilities ---
+    implementation(libs.gson)
+    implementation(libs.kotlin.metadata.jvm) // Forced in resolutionStrategy above
 
-
+    // --- Unit Tests ---
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
 
+    // --- Android UI Tests ---
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 
+    // --- Debugging ---
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

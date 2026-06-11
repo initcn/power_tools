@@ -2,41 +2,44 @@
 # PowerTools Release ProGuard / R8 Rules
 # ==========================================
 
-# Remove logs
+# --- 1. General Optimizations ---
+# Strip all debug and verbose logs from the release build
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
     public static *** v(...);
     public static *** i(...);
 }
 
-# Kotlin Metadata
+# Keep standard Kotlin metadata (often required by serialization libraries)
 -keep class kotlin.Metadata { *; }
 
-# Enums
+# Keep Enums safe from aggressive renaming (standard safety rule)
 -keepclassmembers enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
 
-# ==========================================
-# CRITICAL APP DEPENDENCIES (SCOPED)
-# ==========================================
-
-# 1. SQLCipher (Target only the JNI native bindings to prevent crashes)
+# --- 2. SQLCipher / Database Native Bindings ---
+# CRITICAL: Prevent R8 from obfuscating the JNI bridges, or the encrypted vault will instantly crash
 -keepclasseswithmembernames class net.sqlcipher.** { native <methods>; }
 -keepclasseswithmembernames class net.zetetic.database.sqlcipher.** { native <methods>; }
 -dontwarn net.sqlcipher.**
 -dontwarn net.zetetic.database.sqlcipher.**
 
-# 2. Gson Data Models (Explicitly target ONLY the model saved to JSON)
--keep class com.initcn.powertools.model.CustomDnsProvider { *; }
+# --- 3. Gson Serialization & Room Entities ---
+# Explicitly keep classes that are converted to/from JSON or used directly by Room Reflections.
+# CustomDnsProvider is serialized to SharedPreferences via AppPreferences
+-keep class com.initcn.powertools.feature.dns.domain.CustomDnsProvider { *; }
 
-# 3. Room Database Entities (Explicitly target ONLY the DB entity)
--keep class com.initcn.powertools.data.vault.VaultFileEntity { *; }
+# VaultFileEntity is queried directly via Room DAO reflections
+-keep class com.initcn.powertools.feature.vault.data.VaultFileEntity { *; }
 
-# ==========================================
-# Suppress Warnings for Safe Libraries
-# ==========================================
+# CallRuleEntity is exported/imported to JSON files in CallBlockerViewModel AND used by Room
+-keep class com.initcn.powertools.feature.callblocker.data.CallRuleEntity { *; }
+
+# --- 4. Library Warnings Suppression ---
+# Suppress harmless warnings from standard Google/AndroidX libraries
 -dontwarn kotlin.**
 -dontwarn kotlinx.**
 -dontwarn androidx.**
+-dontwarn com.google.errorprone.annotations.**
