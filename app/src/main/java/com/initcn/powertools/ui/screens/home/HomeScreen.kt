@@ -46,26 +46,6 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(Dimens.MD)
         ) {
 
-            item {
-                Text(
-                    text = stringResource(
-                        R.string.home_title
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Spacer(
-                    modifier = Modifier.height(Dimens.SM)
-                )
-
-                Text(
-                    text = stringResource(
-                        R.string.home_subtitle
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
             items(
                 items = tools,
                 key = { it.name }

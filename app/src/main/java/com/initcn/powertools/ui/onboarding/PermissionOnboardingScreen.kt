@@ -124,7 +124,6 @@ fun PermissionOnboardingScreen(
                                 when (permission) {
 
                                     RequiredPermission.WRITE_SYSTEM_SETTINGS -> {
-
                                         Intent(
                                             Settings.ACTION_MANAGE_WRITE_SETTINGS,
                                             "package:${context.packageName}".toUri()
@@ -138,14 +137,11 @@ fun PermissionOnboardingScreen(
                                     }
 
                                     RequiredPermission.ALL_FILES_ACCESS -> {
-
                                         if (
                                             Build.VERSION.SDK_INT >=
                                             Build.VERSION_CODES.R
                                         ) {
-
                                             try {
-
                                                 Intent(
                                                     Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
                                                     "package:${context.packageName}".toUri()
@@ -156,9 +152,7 @@ fun PermissionOnboardingScreen(
                                                 }.also(
                                                     context::startActivity
                                                 )
-
                                             } catch (_: Exception) {
-
                                                 Intent(
                                                     Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
                                                 ).apply {
@@ -170,6 +164,15 @@ fun PermissionOnboardingScreen(
                                                 )
                                             }
                                         }
+                                    }
+
+                                    RequiredPermission.READ_CALL_LOG -> {
+                                        Intent(
+                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            "package:${context.packageName}".toUri()
+                                        ).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }.also(context::startActivity)
                                     }
 
                                     RequiredPermission.WRITE_SECURE_SETTINGS -> {
@@ -216,7 +219,6 @@ fun PermissionOnboardingScreen(
                             when (permission) {
 
                                 RequiredPermission.WRITE_SYSTEM_SETTINGS -> {
-
                                     Text(
                                         text = tapOpenSettingsText,
                                         style =
@@ -231,7 +233,6 @@ fun PermissionOnboardingScreen(
                                 }
 
                                 RequiredPermission.ALL_FILES_ACCESS -> {
-
                                     Text(
                                         text = tapGrantFilesAccessText,
                                         style =
@@ -242,6 +243,14 @@ fun PermissionOnboardingScreen(
                                             MaterialTheme
                                                 .colorScheme
                                                 .onSurfaceVariant
+                                    )
+                                }
+
+                                RequiredPermission.READ_CALL_LOG -> {
+                                    Text(
+                                        text = "Tap to open App Settings and grant Call Log access.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 

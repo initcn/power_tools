@@ -95,23 +95,28 @@ object PermissionChecker {
     /**
      * Optional permissions.
      */
-    fun getOptionalPermissions(
-        context: Context
-    ): List<RequiredPermission> {
+    fun getOptionalPermissions(context: Context): List<RequiredPermission> {
+        val optional = mutableListOf<RequiredPermission>()
 
-        val optional =
-            mutableListOf<RequiredPermission>()
+        if (!hasWriteSecureSettings(context)) {
+            optional += RequiredPermission.WRITE_SECURE_SETTINGS
+        }
 
-        if (
-            !hasWriteSecureSettings(
-                context
-            )
-        ) {
-
-            optional +=
-                RequiredPermission.WRITE_SECURE_SETTINGS
+        // ADD THIS BLOCK
+        if (!hasCallLogAccess(context)) {
+            optional += RequiredPermission.READ_CALL_LOG
         }
 
         return optional
     }
+
+    /**
+     * Call Blocker feature.
+     */
+    fun hasCallLogAccess(context: Context): Boolean {
+        return context.checkCallingOrSelfPermission(
+            Manifest.permission.READ_CALL_LOG
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
 }

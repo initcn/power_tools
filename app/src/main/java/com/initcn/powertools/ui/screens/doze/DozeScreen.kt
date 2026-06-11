@@ -2,26 +2,13 @@ package com.initcn.powertools.ui.screens.doze
 
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,174 +19,70 @@ import com.initcn.powertools.ui.components.PowerToolScaffold
 import com.initcn.powertools.ui.components.StatusMessage
 import com.initcn.powertools.ui.theme.Dimens
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DozeScreen() {
-
     val context = LocalContext.current
+    var selectedLabel by rememberSaveable { mutableStateOf(DozeManager.getCurrentLabel(context) ?: "1 min") }
+    var statusMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val screenDozeTitle =
-        stringResource(
-            R.string.screen_doze
-        )
-
-    val screenTimeoutDescription =
-        stringResource(
-            R.string.screen_timeout_description
-        )
-
-    val applyTimeoutText =
-        stringResource(
-            R.string.apply_timeout
-        )
-
-    val grantModifySettingsText =
-        stringResource(
-            R.string.grant_modify_settings
-        )
-
-    val timeoutSuccessText =
-        stringResource(
-            R.string.timeout_success
-        )
-
-    val timeoutFailedText =
-        stringResource(
-            R.string.timeout_failed
-        )
-
-    var selectedLabel by rememberSaveable {
-        mutableStateOf(
-            DozeManager.getCurrentLabel(
-                context
-            ) ?: "1 min"
-        )
-    }
-
-    var statusMessage by rememberSaveable {
-        mutableStateOf<String?>(null)
-    }
-
-    PowerToolScaffold(
-        title = screenDozeTitle
-    ) { paddingValues ->
-
+    PowerToolScaffold(title = stringResource(R.string.screen_doze)) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(
-                    Dimens.ScreenPadding
-                ),
-            verticalArrangement =
-                Arrangement.spacedBy(
-                    Dimens.MD
-                )
+                .padding(Dimens.ScreenPadding)
         ) {
-
             Text(
-                text = screenTimeoutDescription,
-                style =
-                    MaterialTheme
-                        .typography
-                        .bodyLarge
+                text = stringResource(R.string.screen_timeout_description),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = Dimens.MD)
             )
 
+            // FIX: Set containerColor to transparent or background to remove the grey
             Card(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface // Or Color.Transparent
+                )
             ) {
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(1)
-                ) {
-
-                    items(
-                        DozeManager.supportedTimeouts
-                    ) { option ->
-
+                LazyColumn {
+                    items(DozeManager.supportedTimeouts) { option ->
                         ListItem(
-                            headlineContent = {
-
-                                Text(
-                                    text =
-                                        option.label
-                                )
-                            },
-
+                            headlineContent = { Text(option.label) },
                             leadingContent = {
-
                                 RadioButton(
-                                    selected =
-                                        selectedLabel ==
-                                                option.label,
-
-                                    onClick = {
-
-                                        selectedLabel =
-                                            option.label
-                                    }
+                                    selected = selectedLabel == option.label,
+                                    onClick = null
                                 )
                             },
-
-                            modifier =
-                                Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedLabel = option.label }
                         )
                     }
                 }
             }
 
             StatusMessage(
-                message = statusMessage
+                message = statusMessage,
+                modifier = Modifier.padding(vertical = Dimens.SM)
             )
 
             Button(
-                modifier =
-                    Modifier.fillMaxWidth(),
-
+                modifier = Modifier.fillMaxWidth(),
                 onClick = {
-
-                    if (
-                        !Settings.System.canWrite(
-                            context
-                        )
-                    ) {
-
-                        statusMessage =
-                            grantModifySettingsText
-
-                        context.startActivity(
-                            Intent(
-                                Settings.ACTION_MANAGE_WRITE_SETTINGS,
-                                "package:${context.packageName}"
-                                    .toUri()
-                            )
-                        )
-
+                    if (!Settings.System.canWrite(context)) {
+                        statusMessage = context.getString(R.string.grant_modify_settings)
+                        context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, "package:${context.packageName}".toUri()))
                         return@Button
                     }
-
-                    val success =
-                        DozeManager.applyTimeout(
-                            context,
-                            selectedLabel
-                        )
-
-                    statusMessage =
-                        if (success) {
-
-                            timeoutSuccessText
-
-                        } else {
-
-                            timeoutFailedText
-                        }
+                    statusMessage = if (DozeManager.applyTimeout(context, selectedLabel))
+                        context.getString(R.string.timeout_success) else context.getString(R.string.timeout_failed)
                 }
             ) {
-
-                Text(
-                    text =
-                        applyTimeoutText
-                )
+                Text(text = stringResource(R.string.apply_timeout))
             }
         }
     }

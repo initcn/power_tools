@@ -3,10 +3,6 @@
     <!-- App -->
     <string name="app_name">Power Tools</string>
 
-    <!-- Home -->
-    <string name="home_title">Utilities</string>
-    <string name="home_subtitle">Useful Android power tools.</string>
-
     <!-- DNS -->
     <string name="dns_switcher">DNS Switcher</string>
     <string name="dns_description">Switch Android Private DNS providers instantly.</string>
@@ -52,5 +48,14 @@
     <string name="adb_command_copied">ADB command copied.</string>
     <string name="tap_open_settings">Tap to open Android Settings.</string>
     <string name="tap_grant_files_access">Tap to grant Full Files Access.</string>
+
+    <!-- Vault-->
+    <string name="secure_vault">Secure Vault</string>
+    <string name="vault_description">Hardware-encrypted virtual storage sandbox.</string>
+    <string name="setup_vault_title">Setup Your Vault</string>
+    <string name="enter_pin_pass">Enter your Master Pin/Password</string>
+    <string name="enable_biometrics_prompt">Would you like to enable biometric unlock?</string>
+    <string name="vault_locked_msg">Vault is securely locked.</string>
+    <string name="error_invalid_auth">Incorrect password or PIN.</string>
 
 </resources>
