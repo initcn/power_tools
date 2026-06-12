@@ -41,7 +41,6 @@ object VaultDbKeyManager {
     }
 
     fun getDatabasePassphrase(context: Context): ByteArray {
-        // FIXED: Removed the trailing "" text token causing array indexing errors
         System.loadLibrary("sqlcipher")
 
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

@@ -9,7 +9,7 @@ object BiometricAuthenticator {
 
     fun authenticate(
         activity: FragmentActivity,
-        onSuccess: () -> Unit, // No longer returns a result object
+        onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
         val executor = ContextCompat.getMainExecutor(activity)
@@ -23,7 +23,6 @@ object BiometricAuthenticator {
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    // Ignore user cancellations so it doesn't flash an error
                     if (errorCode != BiometricPrompt.ERROR_USER_CANCELED) {
                         onError(errString.toString())
                     }

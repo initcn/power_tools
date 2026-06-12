@@ -14,10 +14,7 @@ class AppPreferences @Inject constructor(
 ) {
     private val gson = Gson()
 
-    // ----------------------------------------------------
     // Custom DNS Providers
-    // ----------------------------------------------------
-
     fun getCustomDnsProviders(): List<CustomDnsProvider> {
         val json = prefs.getString(KEY_CUSTOM_DNS_PROVIDERS, null) ?: return emptyList()
         return try {
@@ -62,10 +59,7 @@ class AppPreferences @Inject constructor(
         prefs.edit { remove(KEY_CUSTOM_DNS_PROVIDERS) }
     }
 
-    // ----------------------------------------------------
     // Last DNS Provider
-    // ----------------------------------------------------
-
     fun setLastDnsProvider(provider: String) {
         prefs.edit { putString(KEY_LAST_DNS_PROVIDER, provider) }
     }
@@ -74,10 +68,8 @@ class AppPreferences @Inject constructor(
         return prefs.getString(KEY_LAST_DNS_PROVIDER, null)
     }
 
-    // ----------------------------------------------------
-    // Last Timeout
-    // ----------------------------------------------------
 
+    // Last Timeout
     fun setLastTimeout(timeoutLabel: String) {
         prefs.edit { putString(KEY_LAST_TIMEOUT, timeoutLabel) }
     }
@@ -86,7 +78,6 @@ class AppPreferences @Inject constructor(
         return prefs.getString(KEY_LAST_TIMEOUT, null)
     }
 
-    // Move the constants here to keep the linter happy!
     companion object {
         private const val KEY_CUSTOM_DNS_PROVIDERS = "custom_dns_providers"
         private const val KEY_LAST_DNS_PROVIDER = "last_dns_provider"

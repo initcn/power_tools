@@ -1,24 +1,19 @@
 package com.initcn.powertools.core.ui.components
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import android.widget.Toast
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun StatusMessage(
-    message: String?,
-    modifier: Modifier = Modifier
+    message: String?
 ) {
+    val context = LocalContext.current
 
-    if (message.isNullOrBlank()) {
-        return
+    LaunchedEffect(message) {
+        if (!message.isNullOrBlank()) {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
-
-    Text(
-        text = message,
-        modifier = modifier,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
 }

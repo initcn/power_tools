@@ -1,21 +1,20 @@
 package com.initcn.powertools.core.navigation
 
-// FIXED: Changed the import to track VaultMainScreen instead of the non-existent VaultAuthScreen
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.initcn.powertools.core.ui.components.PowerToolScaffold
-import com.initcn.powertools.feature.callblocker.presentation.CallBlockerScreen
-import com.initcn.powertools.feature.dns.presentation.DnsScreen
-import com.initcn.powertools.feature.downloadsorganizer.presentation.DownloadsScreen
-import com.initcn.powertools.feature.doze.DozeScreen
+import com.initcn.powertools.feature.callblocker.presentation.CallBlockerRoute
+import com.initcn.powertools.feature.dns.presentation.DnsRoute
+import com.initcn.powertools.feature.downloadsorganizer.presentation.DownloadsRoute
+import com.initcn.powertools.feature.doze.presentation.DozeRoute
 import com.initcn.powertools.feature.home.presentation.HomeScreen
-import com.initcn.powertools.feature.vault.presentation.VaultMainScreen
+import com.initcn.powertools.feature.vault.presentation.VaultRoute
 
+
+@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -32,28 +31,34 @@ fun AppNavigation() {
             )
         }
 
-        composable(route = Routes.DOZE) { DozeScreen() }
-        composable(route = Routes.DNS) { DnsScreen() }
-        composable(route = Routes.DOWNLOADS) { DownloadsScreen() }
+        composable(route = Routes.DOZE) {
+            DozeRoute(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
 
+        composable(route = Routes.DNS) {
+            DnsRoute(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = Routes.DOWNLOADS) {
+            DownloadsRoute(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
 
         composable(route = Routes.VAULT_AUTH) {
-            VaultMainScreen(
+            VaultRoute(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
             )
         }
 
-        composable(route = Routes.VAULT_DASHBOARD) {
-            PowerToolScaffold(title = "Vault Dashboard") {
-                Text(
-                    text = "Vault initialized and decrypted. Minimize the application and open your default system 'Files' picker to browse or drag items directly inside!",
-                    modifier = Modifier.padding(it)
-                )
-            }
+        composable(route = Routes.CALL_BLOCKER) {
+            CallBlockerRoute(onNavigateBack = { navController.popBackStack() })
         }
-
-        composable(route = Routes.CALL_BLOCKER) { CallBlockerScreen() }
     }
 }

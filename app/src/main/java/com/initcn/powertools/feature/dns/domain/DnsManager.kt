@@ -9,11 +9,10 @@ import javax.inject.Singleton
 
 @Singleton
 class DnsManager @Inject constructor(
-    @param:ApplicationContext private val context: Context, // FIXED: Added @param:
+    @param:ApplicationContext private val context: Context,
     private val appPreferences: AppPreferences
 ) {
 
-    // FIXED: Moved to companion object to satisfy the linter's naming rules
     companion object {
         private const val PRIVATE_DNS_MODE = "private_dns_mode"
         private const val PRIVATE_DNS_SPECIFIER = "private_dns_specifier"
@@ -29,7 +28,6 @@ class DnsManager @Inject constructor(
             val mode = Settings.Global.getString(resolver, PRIVATE_DNS_MODE)
             val hostname = Settings.Global.getString(resolver, PRIVATE_DNS_SPECIFIER)
 
-            // FIXED: Introduced 'mode' as the subject of 'when' for cleaner code
             when (mode) {
                 "off" -> DnsProvider.OFF
                 "opportunistic" -> DnsProvider.AUTOMATIC

@@ -30,7 +30,6 @@ object PermissionChecker {
     }
 
     fun hasCallLogAccess(context: Context): Boolean {
-        // FIXED: Using ContextCompat instead of checkCallingOrSelfPermission to prevent false positives
         return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.READ_CALL_LOG
@@ -45,14 +44,13 @@ object PermissionChecker {
     }
 
     fun hasPostNotifications(context: Context): Boolean {
-        // NEW: Check for Android 13+ notification permissions
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
         } else {
-            true // Automatically granted on Android 12 and below
+            true
         }
     }
 
@@ -68,7 +66,7 @@ object PermissionChecker {
         val optional = mutableListOf<RequiredPermission>()
         if (!hasWriteSecureSettings(context)) optional += RequiredPermission.WRITE_SECURE_SETTINGS
         if (!hasCallLogAccess(context)) optional += RequiredPermission.READ_CALL_LOG
-        if (!hasPostNotifications(context)) optional += RequiredPermission.POST_NOTIFICATIONS // NEW: Added to list
+        if (!hasPostNotifications(context)) optional += RequiredPermission.POST_NOTIFICATIONS
         return optional
     }
 }

@@ -18,7 +18,5 @@ sealed interface CallBlockerEvent {
     data object ExportRules : CallBlockerEvent
     data class ImportRules(val uri: Uri) : CallBlockerEvent
     data object FetchRecentCalls : CallBlockerEvent
-
-    // ADD THIS LINE
     data object ClearAllRules : CallBlockerEvent
 }

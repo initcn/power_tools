@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.initcn.powertools.feature.vault.domain.VaultDbKeyManager
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
-// Reset to Version 1. A perfectly clean slate.
+// Reset to Version 1.
 @Database(entities = [VaultFileEntity::class], version = 1, exportSchema = false)
 abstract class VaultDatabase : RoomDatabase() {
 

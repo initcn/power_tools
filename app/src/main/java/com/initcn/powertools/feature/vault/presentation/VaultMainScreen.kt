@@ -31,8 +31,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.FolderSpecial
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -58,24 +58,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.initcn.powertools.core.permissions.StorageAccessManager
 import com.initcn.powertools.core.theme.Dimens
 import com.initcn.powertools.core.ui.components.PowerAlertDialog
+import com.initcn.powertools.core.utils.KeepScreenSecure
+import com.initcn.powertools.feature.vault.data.VaultFileEntity
 import com.initcn.powertools.feature.vault.domain.VaultNameEncryptor
 import com.initcn.powertools.feature.vault.domain.auth.BiometricAuthenticator
 
-@OptIn(ExperimentalMaterial3Api::class)
+// ROUTE (Smart Composable)
+// Handles Hilt, Context, SAF Launchers, Biometrics, and Intents.
+
 @Composable
-fun VaultMainScreen(
+fun VaultRoute(
     onNavigateBack: () -> Unit,
     viewModel: VaultViewModel = hiltViewModel()
 ) {
+    KeepScreenSecure()
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -96,10 +99,86 @@ fun VaultMainScreen(
         }
     }
 
-    // ADD state.showDeleteDialog to the remember keys
     val hasEscrowBackup = remember(state.isVaultSetup, state.isUnlocked, hasDocumentsAccess, state.showDeleteDialog) {
         viewModel.hasEscrowBackup()
     }
+
+    val launchBiometricUnlock = {
+        BiometricAuthenticator.authenticate(
+            activity = context as FragmentActivity,
+            onSuccess = { viewModel.onEvent(VaultEvent.ProcessBiometricUnlock) },
+            onError = { viewModel.onEvent(VaultEvent.SetError(it)) }
+        )
+    }
+
+    val launchBiometricEnable = {
+        BiometricAuthenticator.authenticate(
+            activity = context as FragmentActivity,
+            onSuccess = { viewModel.onEvent(VaultEvent.EnableBiometrics) },
+            onError = { viewModel.onEvent(VaultEvent.SetError(it)) }
+        )
+    }
+
+    val viewFile = { file: VaultFileEntity ->
+        try {
+            val uri = DocumentsContract.buildDocumentUri("com.initcn.powertools.vault.documents", file.id)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, file.mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            viewModel.onEvent(VaultEvent.SetError("No app installed to view this file type."))
+        } catch (e: Exception) {
+            viewModel.onEvent(VaultEvent.SetError("Failed to open file."))
+        }
+    }
+
+    if (!hasDocumentsAccess) {
+        // Uniform blocking prompt for SAF Access
+        PowerAlertDialog(
+            title = "Vault Storage Access",
+            icon = Icons.Default.Security,
+            confirmText = "Grant Permission",
+            dismissText = "Go Back",
+            onConfirm = { safLauncher.launch(null) },
+            onDismiss = onNavigateBack,
+            content = {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SM)) {
+                    Text("Required to manage files inside your secure vault. Please select or create a folder (e.g., 'PowerToolsVault') and click 'Use this folder'.")
+                }
+            }
+        )
+    } else {
+        VaultScreen(
+            state = state,
+            hasEscrowBackup = hasEscrowBackup,
+            onNavigateBack = onNavigateBack,
+            onEvent = viewModel::onEvent,
+            onLaunchFilePicker = { filePickerLauncher.launch("*/*") },
+            onBiometricUnlock = launchBiometricUnlock,
+            onBiometricEnable = launchBiometricEnable,
+            onViewFile = viewFile
+        )
+    }
+}
+
+// SCREEN (Dumb Composable)
+// Pure UI representation.
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun VaultScreen(
+    state: VaultUiState,
+    hasEscrowBackup: Boolean,
+    onNavigateBack: () -> Unit,
+    onEvent: (VaultEvent) -> Unit,
+    onLaunchFilePicker: () -> Unit,
+    onBiometricUnlock: () -> Unit,
+    onBiometricEnable: () -> Unit,
+    onViewFile: (VaultFileEntity) -> Unit
+) {
+    val context = LocalContext.current
 
     if (state.showDeleteDialog) {
         PowerAlertDialog(
@@ -108,8 +187,8 @@ fun VaultMainScreen(
             confirmText = "Permanently Delete",
             icon = Icons.Default.Warning,
             isDestructive = true,
-            onDismiss = { viewModel.onEvent(VaultEvent.ToggleDeleteDialog(false)) },
-            onConfirm = { viewModel.onEvent(VaultEvent.DeleteEntireVault) }
+            onDismiss = { onEvent(VaultEvent.ToggleDeleteDialog(false)) },
+            onConfirm = { onEvent(VaultEvent.DeleteEntireVault) }
         )
     }
 
@@ -120,8 +199,8 @@ fun VaultMainScreen(
             confirmText = "Delete",
             icon = Icons.Default.Delete,
             isDestructive = true,
-            onDismiss = { viewModel.onEvent(VaultEvent.ToggleFileDeleteDialog(null)) },
-            onConfirm = { viewModel.onEvent(VaultEvent.DeleteFile) }
+            onDismiss = { onEvent(VaultEvent.ToggleFileDeleteDialog(null)) },
+            onConfirm = { onEvent(VaultEvent.DeleteFile) }
         )
     }
 
@@ -136,7 +215,7 @@ fun VaultMainScreen(
                 },
                 actions = {
                     if (state.isUnlocked) {
-                        IconButton(onClick = { viewModel.onEvent(VaultEvent.LockVault) }) {
+                        IconButton(onClick = { onEvent(VaultEvent.LockVault) }) {
                             Icon(Icons.Default.Lock, contentDescription = "Lock Vault")
                         }
                     }
@@ -145,12 +224,12 @@ fun VaultMainScreen(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = hasDocumentsAccess && state.isUnlocked,
+                visible = state.isUnlocked,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
                 FloatingActionButton(
-                    onClick = { filePickerLauncher.launch("*/*") },
+                    onClick = onLaunchFilePicker,
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
@@ -165,55 +244,23 @@ fun VaultMainScreen(
                 .fillMaxSize()
         ) {
             AnimatedContent(
-                targetState = Triple(state.isLoading, hasDocumentsAccess, state.isUnlocked),
+                targetState = Pair(state.isLoading, state.isUnlocked),
                 transitionSpec = {
                     fadeIn().togetherWith(fadeOut())
                 },
                 label = "VaultStateTransition"
-            ) { (isLoading, hasAccess, isUnlocked) ->
+            ) { (isLoading, isUnlocked) ->
                 Column(
                     modifier = Modifier
                         .padding(Dimens.MD)
                         .fillMaxSize(),
-                    verticalArrangement = if (isUnlocked || !hasAccess) Arrangement.Top else Arrangement.Center,
+                    verticalArrangement = if (isUnlocked) Arrangement.Top else Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     when {
                         isLoading -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator()
-                            }
-                        }
-
-                        !hasAccess -> {
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                Column(
-                                    modifier = Modifier.padding(Dimens.LG),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.FolderSpecial,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(48.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Spacer(modifier = Modifier.height(Dimens.SM))
-                                    Text(
-                                        text = "Vault Storage Access Required",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Text(
-                                        text = "To securely store your encrypted files, please select or create a folder (e.g., 'PowerToolsVault') and click 'Use this folder'.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(vertical = Dimens.SM)
-                                    )
-                                    Spacer(modifier = Modifier.height(Dimens.SM))
-                                    Button(onClick = { safLauncher.launch(null) }) {
-                                        Text("Select Vault Folder")
-                                    }
-                                }
                             }
                         }
 
@@ -229,7 +276,7 @@ fun VaultMainScreen(
 
                                 OutlinedTextField(
                                     value = state.pinInput,
-                                    onValueChange = { viewModel.onEvent(VaultEvent.UpdatePinInput(it)) },
+                                    onValueChange = { onEvent(VaultEvent.UpdatePinInput(it)) },
                                     label = { Text("Enter Previous PIN") },
                                     visualTransformation = PasswordVisualTransformation(),
                                     modifier = Modifier.fillMaxWidth()
@@ -237,13 +284,13 @@ fun VaultMainScreen(
                                 Spacer(modifier = Modifier.height(Dimens.MD))
 
                                 Button(
-                                    onClick = { viewModel.onEvent(VaultEvent.RestoreVault) },
+                                    onClick = { onEvent(VaultEvent.RestoreVault) },
                                     modifier = Modifier.fillMaxWidth()
                                 ) { Text("Restore & Open Vault") }
 
                                 Spacer(modifier = Modifier.height(Dimens.LG))
                                 TextButton(
-                                    onClick = { viewModel.onEvent(VaultEvent.ToggleDeleteDialog(true)) },
+                                    onClick = { onEvent(VaultEvent.ToggleDeleteDialog(true)) },
                                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                                 ) { Text("Forgot PIN? Factory Reset Vault") }
 
@@ -253,7 +300,7 @@ fun VaultMainScreen(
 
                                 OutlinedTextField(
                                     value = state.pinInput,
-                                    onValueChange = { viewModel.onEvent(VaultEvent.UpdatePinInput(it)) },
+                                    onValueChange = { onEvent(VaultEvent.UpdatePinInput(it)) },
                                     label = { Text("Enter PIN") },
                                     visualTransformation = PasswordVisualTransformation(),
                                     modifier = Modifier.fillMaxWidth()
@@ -262,7 +309,7 @@ fun VaultMainScreen(
 
                                 OutlinedTextField(
                                     value = state.pinConfirmInput,
-                                    onValueChange = { viewModel.onEvent(VaultEvent.UpdatePinConfirmInput(it)) },
+                                    onValueChange = { onEvent(VaultEvent.UpdatePinConfirmInput(it)) },
                                     label = { Text("Confirm PIN") },
                                     visualTransformation = PasswordVisualTransformation(),
                                     modifier = Modifier.fillMaxWidth()
@@ -270,7 +317,7 @@ fun VaultMainScreen(
                                 Spacer(modifier = Modifier.height(Dimens.MD))
 
                                 Button(
-                                    onClick = { viewModel.onEvent(VaultEvent.SetupVault) },
+                                    onClick = { onEvent(VaultEvent.SetupVault) },
                                     modifier = Modifier.fillMaxWidth()
                                 ) { Text("Create Vault") }
 
@@ -280,7 +327,7 @@ fun VaultMainScreen(
 
                                 OutlinedTextField(
                                     value = state.pinInput,
-                                    onValueChange = { viewModel.onEvent(VaultEvent.UpdatePinInput(it)) },
+                                    onValueChange = { onEvent(VaultEvent.UpdatePinInput(it)) },
                                     label = { Text("Master PIN") },
                                     visualTransformation = PasswordVisualTransformation(),
                                     modifier = Modifier.fillMaxWidth()
@@ -288,20 +335,14 @@ fun VaultMainScreen(
                                 Spacer(modifier = Modifier.height(Dimens.MD))
 
                                 Button(
-                                    onClick = { viewModel.onEvent(VaultEvent.UnlockVault) },
+                                    onClick = { onEvent(VaultEvent.UnlockVault) },
                                     modifier = Modifier.fillMaxWidth()
                                 ) { Text("Unlock Vault") }
 
                                 if (state.isBiometricEnabled) {
                                     Spacer(modifier = Modifier.height(Dimens.SM))
                                     Button(
-                                        onClick = {
-                                            BiometricAuthenticator.authenticate(
-                                                activity = context as FragmentActivity,
-                                                onSuccess = { viewModel.onEvent(VaultEvent.ProcessBiometricUnlock) },
-                                                onError = { viewModel.onEvent(VaultEvent.SetError(it)) }
-                                            )
-                                        },
+                                        onClick = onBiometricUnlock,
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -330,22 +371,14 @@ fun VaultMainScreen(
                                 Text("Your Vault Files", style = MaterialTheme.typography.titleMedium)
 
                                 if (!state.isBiometricEnabled) {
-                                    TextButton(
-                                        onClick = {
-                                            BiometricAuthenticator.authenticate(
-                                                activity = context as FragmentActivity,
-                                                onSuccess = { viewModel.onEvent(VaultEvent.EnableBiometrics) },
-                                                onError = { viewModel.onEvent(VaultEvent.SetError(it)) }
-                                            )
-                                        }
-                                    ) {
+                                    TextButton(onClick = onBiometricEnable) {
                                         Icon(Icons.Default.Fingerprint, contentDescription = null, modifier = Modifier.size(Dimens.IconSM))
                                         Spacer(Modifier.width(Dimens.XS))
                                         Text("Enable Biometrics")
                                     }
                                 } else {
                                     TextButton(
-                                        onClick = { viewModel.onEvent(VaultEvent.DisableBiometrics) },
+                                        onClick = { onEvent(VaultEvent.DisableBiometrics) },
                                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                                     ) { Text("Disable Biometrics") }
                                 }
@@ -366,16 +399,16 @@ fun VaultMainScreen(
                                         )
                                         OutlinedTextField(
                                             value = state.newPinInput,
-                                            onValueChange = { viewModel.onEvent(VaultEvent.UpdateNewPinInput(it)) },
+                                            onValueChange = { onEvent(VaultEvent.UpdateNewPinInput(it)) },
                                             label = { Text("Enter New PIN") },
                                             visualTransformation = PasswordVisualTransformation(),
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                         Spacer(modifier = Modifier.height(Dimens.SM))
                                         Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                                            TextButton(onClick = { viewModel.onEvent(VaultEvent.ToggleKeyRotation(false)) }) { Text("Cancel") }
+                                            TextButton(onClick = { onEvent(VaultEvent.ToggleKeyRotation(false)) }) { Text("Cancel") }
                                             Spacer(modifier = Modifier.width(Dimens.SM))
-                                            Button(onClick = { viewModel.onEvent(VaultEvent.RotateMasterKey) }) { Text("Confirm Rotation") }
+                                            Button(onClick = { onEvent(VaultEvent.RotateMasterKey) }) { Text("Confirm Rotation") }
                                         }
                                     }
                                 }
@@ -385,11 +418,11 @@ fun VaultMainScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     TextButton(
-                                        onClick = { viewModel.onEvent(VaultEvent.ToggleDeleteDialog(true)) },
+                                        onClick = { onEvent(VaultEvent.ToggleDeleteDialog(true)) },
                                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                                     ) { Text("Delete Vault") }
 
-                                    TextButton(onClick = { viewModel.onEvent(VaultEvent.ToggleKeyRotation(true)) }) { Text("Change PIN") }
+                                    TextButton(onClick = { onEvent(VaultEvent.ToggleKeyRotation(true)) }) { Text("Change PIN") }
                                 }
                             }
 
@@ -417,20 +450,7 @@ fun VaultMainScreen(
                                         Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .clickable {
-                                                    try {
-                                                        val uri = DocumentsContract.buildDocumentUri("com.initcn.powertools.vault.documents", file.id)
-                                                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                                                            setDataAndType(uri, file.mimeType)
-                                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                                        }
-                                                        context.startActivity(intent)
-                                                    } catch (e: ActivityNotFoundException) {
-                                                        viewModel.onEvent(VaultEvent.SetError("No app installed to view this file type."))
-                                                    } catch (e: Exception) {
-                                                        viewModel.onEvent(VaultEvent.SetError("Failed to open file."))
-                                                    }
-                                                },
+                                                .clickable { onViewFile(file) },
                                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                                             elevation = CardDefaults.cardElevation(defaultElevation = Dimens.ElevationNone)
                                         ) {
@@ -445,7 +465,7 @@ fun VaultMainScreen(
                                                     Spacer(modifier = Modifier.height(Dimens.XXS))
                                                     Text(text = readableSize, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                                 }
-                                                IconButton(onClick = { viewModel.onEvent(VaultEvent.ToggleFileDeleteDialog(file)) }) {
+                                                IconButton(onClick = { onEvent(VaultEvent.ToggleFileDeleteDialog(file)) }) {
                                                     Icon(Icons.Default.Delete, contentDescription = "Delete File", tint = MaterialTheme.colorScheme.error)
                                                 }
                                             }

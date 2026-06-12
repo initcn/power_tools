@@ -16,9 +16,6 @@ interface VaultDao {
     @Query("SELECT * FROM vault_metadata WHERE id = :id")
     suspend fun getFileById(id: String): VaultFileEntity?
 
-    @Query("SELECT * FROM vault_metadata WHERE encryptedName = :encryptedName")
-    suspend fun getFileByEncryptedName(encryptedName: String): VaultFileEntity?
-
     @Query("SELECT * FROM vault_metadata WHERE parentPath = :parentPath")
     suspend fun getFilesByParentPath(parentPath: String): List<VaultFileEntity>
 

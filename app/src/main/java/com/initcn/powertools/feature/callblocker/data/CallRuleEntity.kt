@@ -13,13 +13,13 @@ data class CallRuleEntity(
     val id: String = UUID.randomUUID().toString(),
 
     @ColumnInfo(name = "pattern")
-    val pattern: String, // The phone number or regex pattern
+    val pattern: String,
 
     @ColumnInfo(name = "ruleType")
     val ruleType: RuleType,
 
     @ColumnInfo(name = "label")
-    val label: String? = null, // e.g., "Mom", "Spam Prefix", "UK Numbers"
+    val label: String? = null,
 
     @ColumnInfo(name = "createdAt")
     val createdAt: Long = System.currentTimeMillis()

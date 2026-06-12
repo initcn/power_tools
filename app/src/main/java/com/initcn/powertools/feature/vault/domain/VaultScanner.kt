@@ -17,7 +17,7 @@ class VaultScanner @Inject constructor(
     suspend fun rebuildCatalogFromPublicStorage(vaultRoot: DocumentFile, dao: VaultDao) {
         dao.deleteAll()
 
-        // 1. SAF listFiles() returns an Array<DocumentFile>
+        // SAF listFiles() returns an Array<DocumentFile>
         // Filter only for .enc files
         val files = vaultRoot.listFiles().filter { it.name?.endsWith(".enc") == true }
 
@@ -26,7 +26,7 @@ class VaultScanner @Inject constructor(
                 // The file ID is the filename without the ".enc" extension
                 val fileId = file.name?.substringBeforeLast(".") ?: return@forEach
 
-                // 2. Open stream via ContentResolver for SAF access
+                // Open stream via ContentResolver for SAF access
                 context.contentResolver.openInputStream(file.uri)?.use { fileInputStream ->
                     // Disable automated header skip to allow the scanner to read it manually
                     VaultCryptoEngine.decryptStream(fileInputStream, consumeHeader = false)

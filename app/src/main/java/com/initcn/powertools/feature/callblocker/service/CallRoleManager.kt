@@ -6,9 +6,7 @@ import android.content.Intent
 
 object CallRoleManager {
 
-    /**
-     * Checks if the app currently holds the Call Screening Role.
-     */
+    // Checks if the app currently holds the Call Screening Role.
     fun hasCallScreeningRole(context: Context): Boolean {
         val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
         return roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)

@@ -21,8 +21,6 @@ abstract class CallBlockerDatabase : RoomDatabase() {
                     CallBlockerDatabase::class.java,
                     "call_blocker_db"
                 )
-                    // Added destructive migration for early development.
-                    // Remove or handle properly before production!
                     .fallbackToDestructiveMigration(false)
                     .build()
 

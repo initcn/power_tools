@@ -1,15 +1,12 @@
 package com.initcn.powertools.feature.downloadsorganizer.domain
 
-import android.content.Context
 import android.os.Environment
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class DownloadsOrganizer @Inject constructor(
-    @ApplicationContext private val context: Context
 ) {
 
     data class MoveOperation(
@@ -54,13 +51,13 @@ class DownloadsOrganizer @Inject constructor(
                 val category = DownloadCategory.fromExtension(extension)
 
                 try {
-                    // 1. Find or create the target category folder
+                    //  Find or create the target category folder
                     val targetFolder = File(root, category.folderName)
                     if (!targetFolder.exists()) {
                         targetFolder.mkdirs()
                     }
 
-                    // 2. Move the file using native Java IO renameTo (lightning fast)
+                    // Move the file using native Java IO renameTo (lightning fast)
                     if (targetFolder.exists() && targetFolder.isDirectory) {
                         val targetFile = File(targetFolder, file.name)
 
@@ -75,21 +72,6 @@ class DownloadsOrganizer @Inject constructor(
                 }
             }
         }
-
         return movedCount
-    }
-
-    fun getCategoryCounts(): Map<DownloadCategory, Int> {
-        return preview().groupingBy { it.category }.eachCount()
-    }
-
-    fun totalFiles(): Int = preview().size
-
-    fun downloadsExists(): Boolean {
-        return getDownloadsRoot()?.exists() == true
-    }
-
-    fun downloadsPath(): String {
-        return getDownloadsRoot()?.absolutePath ?: ""
     }
 }

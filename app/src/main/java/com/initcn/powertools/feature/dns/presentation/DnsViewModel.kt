@@ -71,7 +71,6 @@ class DnsViewModel @Inject constructor(
         )
 
         if (success) {
-            // Save custom provider if it's new
             if (provider == DnsProvider.CUSTOM && hostname.isNotBlank()) {
                 appPreferences.addCustomDnsProviderIfMissing(
                     CustomDnsProvider(name = hostname, hostname = hostname)

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface CallRuleDao {
 
-    // --- UI Queries (Reactive Streams for Compose) ---
+    // UI Queries (Reactive Streams for Compose)
 
     @Query("SELECT * FROM call_rules ORDER BY createdAt DESC")
     fun getAllRulesFlow(): Flow<List<CallRuleEntity>>
@@ -19,7 +19,7 @@ interface CallRuleDao {
     @Query("SELECT * FROM call_rules WHERE ruleType = :type ORDER BY createdAt DESC")
     fun getRulesByTypeFlow(type: RuleType): Flow<List<CallRuleEntity>>
 
-    // --- Engine Queries (Fast, one-shot reads for the CallScreeningService) ---
+    // Engine Queries (Fast, one-shot reads for the CallScreeningService)
 
     @Query("SELECT * FROM call_rules WHERE ruleType = 'WHITELIST'")
     suspend fun getWhitelistSync(): List<CallRuleEntity>
@@ -36,17 +36,17 @@ interface CallRuleDao {
     @Query("SELECT * FROM call_rules WHERE ruleType = 'BLOCKLIST_REGEX'")
     suspend fun getRegexBlocklistSync(): List<CallRuleEntity>
 
-    // --- Mutations ---
+    // Mutations
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRule(rule: CallRuleEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRules(rules: List<CallRuleEntity>) // For batch importing
+    suspend fun insertRules(rules: List<CallRuleEntity>)
 
     @Delete
     suspend fun deleteRule(rule: CallRuleEntity)
 
     @Query("DELETE FROM call_rules")
-    suspend fun deleteAllRules() // For factory resets / massive imports
+    suspend fun deleteAllRules()
 }

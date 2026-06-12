@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,14 +21,9 @@ import androidx.compose.material.icons.automirrored.filled.CallMissed
 import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CallMade
-import androidx.compose.material.icons.filled.CallMissed
-import androidx.compose.material.icons.filled.CallReceived
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -47,7 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.initcn.powertools.core.theme.Dimens
@@ -60,63 +53,16 @@ import java.util.Locale
 
 @Composable
 fun RecentCallsTab(
-    hasCallLogPermission: Boolean,
-    hasContactsPermission: Boolean,
     recentCalls: List<CallLogEntry>,
     whitelist: List<CallRuleEntity>,
     exactBlocklist: List<CallRuleEntity>,
     regexBlocklist: List<CallRuleEntity>,
-    onRequestCallLogPermission: () -> Unit,
-    onRequestContactsPermission: () -> Unit,
-    onAddToRule: (String, RuleType) -> Unit
+    onAddToRule: (String, RuleType) -> Unit,
+    onRemoveRule: (CallRuleEntity) -> Unit // Added callback for removing rules
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // --- PERMISSION ALERTS ---
-        if (!hasCallLogPermission || !hasContactsPermission) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.MD),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (!hasCallLogPermission) {
-                        Text(
-                            text = "Call Log access required to view recent calls.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(Dimens.SM))
-                        Button(onClick = onRequestCallLogPermission) {
-                            Text("Grant Call Log Permission")
-                        }
-                        Spacer(modifier = Modifier.height(Dimens.LG))
-                    }
-
-                    if (!hasContactsPermission) {
-                        Text(
-                            text = "Contacts access required to block unsaved numbers.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(Dimens.SM))
-                        Button(
-                            onClick = onRequestContactsPermission,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary
-                            )
-                        ) {
-                            Text("Grant Contacts Permission")
-                        }
-                    }
-                }
-            }
-            // If we don't have Call Log access, stop drawing the rest of the tab
-            if (!hasCallLogPermission) return@Column
-        }
-
-        // --- EMPTY STATE ---
+        // EMPTY STATE
         if (recentCalls.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
@@ -127,24 +73,24 @@ fun RecentCallsTab(
             return@Column
         }
 
-        // --- LIST STATE ---
+        // LIST STATE
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(Dimens.MD),
             verticalArrangement = Arrangement.spacedBy(Dimens.SM)
         ) {
-            // FIX: Replaced 'it.id' with a composite key of number and date
             items(recentCalls, key = { "${it.number}_${it.date}" }) { call ->
 
-                // Determine current status based on active rules
-                val isWhitelisted = whitelist.any { it.pattern == call.number }
-                val isBlockedExact = exactBlocklist.any { it.pattern == call.number }
+                // Find exact entities instead of just checking if they exist
+                val whitelistedRule = whitelist.find { it.pattern == call.number }
+                val blockedRule = exactBlocklist.find { it.pattern == call.number }
 
                 RecentCallItem(
                     call = call,
-                    isWhitelisted = isWhitelisted,
-                    isBlocked = isBlockedExact,
-                    onAddToRule = onAddToRule
+                    whitelistedRule = whitelistedRule,
+                    blockedRule = blockedRule,
+                    onAddToRule = onAddToRule,
+                    onRemoveRule = onRemoveRule
                 )
             }
         }
@@ -154,25 +100,26 @@ fun RecentCallsTab(
 @Composable
 fun RecentCallItem(
     call: CallLogEntry,
-    isWhitelisted: Boolean,
-    isBlocked: Boolean,
-    onAddToRule: (String, RuleType) -> Unit
+    whitelistedRule: CallRuleEntity?,
+    blockedRule: CallRuleEntity?,
+    onAddToRule: (String, RuleType) -> Unit,
+    onRemoveRule: (CallRuleEntity) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
+    val isBlocked = blockedRule != null
+    val isWhitelisted = whitelistedRule != null
+
     // Format timestamp
     val formatter = remember { SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault()) }
-
-    // FIX: Changed call.timestamp to call.date
     val dateString = remember(call.date) { formatter.format(Date(call.date)) }
 
     // Determine call type icon
     val callIcon = when (call.type) {
-        // Standard Android CallLog types mapping
         1 -> Icons.AutoMirrored.Filled.CallReceived // Incoming
         2 -> Icons.AutoMirrored.Filled.CallMade     // Outgoing
         3 -> Icons.AutoMirrored.Filled.CallMissed   // Missed
-        5 -> Icons.Default.Block        // Rejected/Blocked
+        5 -> Icons.Default.Block                    // Rejected/Blocked
         else -> Icons.Default.Call
     }
 
@@ -268,7 +215,15 @@ fun RecentCallItem(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
-                    if (!isBlocked) {
+                    if (isBlocked) {
+                        DropdownMenuItem(
+                            text = { Text("Remove from Blocklist", color = MaterialTheme.colorScheme.error) },
+                            onClick = {
+                                onRemoveRule(blockedRule)
+                                showMenu = false
+                            }
+                        )
+                    } else {
                         DropdownMenuItem(
                             text = { Text("Block Number") },
                             onClick = {
@@ -277,7 +232,16 @@ fun RecentCallItem(
                             }
                         )
                     }
-                    if (!isWhitelisted) {
+
+                    if (isWhitelisted) {
+                        DropdownMenuItem(
+                            text = { Text("Remove from Whitelist", color = MaterialTheme.colorScheme.error) },
+                            onClick = {
+                                onRemoveRule(whitelistedRule)
+                                showMenu = false
+                            }
+                        )
+                    } else {
                         DropdownMenuItem(
                             text = { Text("Whitelist Number") },
                             onClick = {

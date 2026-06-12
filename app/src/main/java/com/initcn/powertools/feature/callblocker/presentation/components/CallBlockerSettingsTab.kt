@@ -1,17 +1,20 @@
 package com.initcn.powertools.feature.callblocker.presentation.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -19,7 +22,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,10 +32,6 @@ import com.initcn.powertools.feature.callblocker.presentation.CallBlockerUiState
 @Composable
 fun CallBlockerSettingsTab(
     state: CallBlockerUiState,
-    hasCallLogPermission: Boolean,
-    hasContactsPermission: Boolean,
-    onRequestCallLogPermission: () -> Unit,
-    onRequestContactsPermission: () -> Unit,
     onEvent: (CallBlockerEvent) -> Unit
 ) {
     Column(
@@ -41,46 +39,7 @@ fun CallBlockerSettingsTab(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // --- 1. PERMISSIONS SECTION ---
-        Text(
-            text = "App Permissions",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = Dimens.MD, top = Dimens.MD, bottom = Dimens.XS)
-        )
-
-        ListItem(
-            headlineContent = { Text("Call Log Access") },
-            supportingContent = { Text("Required to view recent calls history.") },
-            trailingContent = {
-                if (hasCallLogPermission) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = "Granted", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                } else {
-                    TextButton(onClick = onRequestCallLogPermission, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
-                        Text("Grant")
-                    }
-                }
-            }
-        )
-        HorizontalDivider(thickness = 0.5.dp)
-
-        ListItem(
-            headlineContent = { Text("Contacts Access") },
-            supportingContent = { Text("Required to identify and block unsaved numbers.") },
-            trailingContent = {
-                if (hasContactsPermission) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = "Granted", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                } else {
-                    TextButton(onClick = onRequestContactsPermission, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
-                        Text("Grant")
-                    }
-                }
-            }
-        )
-        HorizontalDivider(thickness = 0.5.dp)
-        Spacer(modifier = Modifier.height(Dimens.SM))
-
-        // --- 2. FILTER TRIGGERS SECTION ---
+        // FILTER TRIGGERS SECTION
         Text(
             text = "Block Triggers",
             style = MaterialTheme.typography.titleSmall,
@@ -97,18 +56,10 @@ fun CallBlockerSettingsTab(
 
         ListItem(
             headlineContent = { Text("Block Unsaved Contacts") },
-            supportingContent = {
-                Column {
-                    Text("Only allow numbers saved in your phone book.")
-                    if (!hasContactsPermission) {
-                        Text("Requires Contacts Permission. Tap to grant above.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = Dimens.XXS))
-                    }
-                }
-            },
+            supportingContent = { Text("Only allow numbers saved in your phone book.") },
             trailingContent = {
                 Switch(
-                    checked = state.blockUnsavedContacts && hasContactsPermission,
-                    enabled = hasContactsPermission,
+                    checked = state.blockUnsavedContacts,
                     onCheckedChange = { onEvent(CallBlockerEvent.ToggleBlockUnsaved(it)) }
                 )
             }
@@ -116,7 +67,7 @@ fun CallBlockerSettingsTab(
         HorizontalDivider(thickness = 0.5.dp)
         Spacer(modifier = Modifier.height(Dimens.SM))
 
-        // --- 3. INTERCEPTION METHOD SECTION (Restored!) ---
+        // INTERCEPTION METHOD SECTION
         Text(
             text = "Interception Behavior",
             style = MaterialTheme.typography.titleSmall,
@@ -124,54 +75,88 @@ fun CallBlockerSettingsTab(
             modifier = Modifier.padding(start = Dimens.MD, top = Dimens.MD, bottom = Dimens.XS)
         )
 
-        ListItem(
-            headlineContent = { Text("Disallow Call") },
-            supportingContent = { Text("Terminate the call immediately.") },
-            trailingContent = { Switch(checked = state.disallowCall, onCheckedChange = { onEvent(CallBlockerEvent.ToggleDisallow(it)) }) }
-        )
-        HorizontalDivider(thickness = 0.5.dp)
+        val isOff = !state.disallowCall && !state.silenceCall
+        val isSilence = state.silenceCall && !state.disallowCall
+        val isDisallow = state.disallowCall
 
-        ListItem(
-            headlineContent = { Text("Reject Call") },
-            supportingContent = { Text("Send the blocked caller directly to voicemail.") },
-            trailingContent = {
-                Switch(
-                    checked = state.rejectCall && state.disallowCall,
-                    enabled = state.disallowCall, // Only works if disallow is enabled
-                    onCheckedChange = { onEvent(CallBlockerEvent.ToggleReject(it)) }
+        // Mode Selector Buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.MD, vertical = Dimens.SM),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SM)
+        ) {
+            Button(
+                onClick = {
+                    onEvent(CallBlockerEvent.ToggleDisallow(false))
+                    onEvent(CallBlockerEvent.ToggleSilence(false))
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isOff) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (isOff) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-        )
+            ) { Text("Off") }
+
+            Button(
+                onClick = {
+                    onEvent(CallBlockerEvent.ToggleDisallow(false))
+                    onEvent(CallBlockerEvent.ToggleSilence(true))
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSilence) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (isSilence) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) { Text("Silence") }
+
+            Button(
+                onClick = {
+                    onEvent(CallBlockerEvent.ToggleSilence(false))
+                    onEvent(CallBlockerEvent.ToggleDisallow(true))
+                },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDisallow) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (isDisallow) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) { Text("Disallow") }
+        }
         HorizontalDivider(thickness = 0.5.dp)
 
+        // Conditional "Pop Up" only for Disallow
+        AnimatedVisibility(visible = state.disallowCall) {
+            Column {
+                ListItem(
+                    headlineContent = { Text("Reject Call") },
+                    supportingContent = { Text("Hang up as soon as call arrives.") },
+                    trailingContent = {
+                        Switch(
+                            checked = state.rejectCall,
+                            onCheckedChange = { onEvent(CallBlockerEvent.ToggleReject(it)) }
+                        )
+                    }
+                )
+                HorizontalDivider(thickness = 0.5.dp)
+            }
+        }
+        Spacer(modifier = Modifier.height(Dimens.SM))
+
+        // GLOBAL: Skip Notification (Appears for both Silence/Disallow)
         ListItem(
             headlineContent = { Text("Skip System Notification") },
-            supportingContent = { Text("Prevent Android from showing a 'Missed Call' alert.") },
+            supportingContent = { Text("Prevent showing an 'Interception' alert.") },
             trailingContent = {
                 Switch(
-                    checked = state.skipNotif && state.disallowCall,
-                    enabled = state.disallowCall,
+                    checked = state.skipNotif,
+                    enabled = !isOff, // Greyed out if "Off" is selected
                     onCheckedChange = { onEvent(CallBlockerEvent.ToggleSkipNotif(it)) }
                 )
             }
         )
         HorizontalDivider(thickness = 0.5.dp)
 
-        ListItem(
-            headlineContent = { Text("Silence Call Only") },
-            supportingContent = { Text("Let the call ring in the background without sound/vibration instead of dropping it.") },
-            trailingContent = {
-                Switch(
-                    checked = state.silenceCall && !state.disallowCall,
-                    enabled = !state.disallowCall, // Silence and Disallow are mutually exclusive in Telecom API
-                    onCheckedChange = { onEvent(CallBlockerEvent.ToggleSilence(it)) }
-                )
-            }
-        )
-        HorizontalDivider(thickness = 0.5.dp)
-        Spacer(modifier = Modifier.height(Dimens.SM))
-
-        // --- 4. DATA MANAGEMENT SECTION ---
+        // DATA MANAGEMENT SECTION
         Text(
             text = "Data Management",
             style = MaterialTheme.typography.titleSmall,

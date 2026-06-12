@@ -15,21 +15,21 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object CoreModule {
 
-    // 1. Provide SharedPreferences globally
+    // Provide SharedPreferences globally
     @Provides
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("powertools_preferences", Context.MODE_PRIVATE)
     }
 
-    // 2. Provide the Call Blocker Database
+    // Provide the Call Blocker Database
     @Provides
     @Singleton
     fun provideCallBlockerDatabase(@ApplicationContext context: Context): CallBlockerDatabase {
         return CallBlockerDatabase.getDatabase(context)
     }
 
-    // 3. Provide the DAO directly (so ViewModels don't need to know about the Database)
+    // Provide the DAO directly (so ViewModels don't need to know about the Database)
     @Provides
     @Singleton
     fun provideCallRuleDao(database: CallBlockerDatabase): CallRuleDao {

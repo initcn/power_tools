@@ -26,7 +26,7 @@ class CallBlockerPrefs @Inject constructor(
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    // --- Filters ---
+    // Filters
 
     fun isBlockHiddenEnabled(): Boolean = prefs.getBoolean(KEY_BLOCK_HIDDEN, false)
 
@@ -40,7 +40,7 @@ class CallBlockerPrefs @Inject constructor(
         prefs.edit { putBoolean(KEY_BLOCK_UNSAVED, enabled) }
     }
 
-    // --- Interception Behaviors ---
+    // Interception Behaviors
 
     fun isDisallowEnabled(): Boolean = prefs.getBoolean(KEY_DISALLOW_CALL, true)
 

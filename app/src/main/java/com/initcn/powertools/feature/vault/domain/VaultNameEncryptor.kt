@@ -101,8 +101,6 @@ object VaultNameEncryptor {
 
     fun decryptName(context: Context, encryptedName: String): String {
         val decoded = Base64.decode(encryptedName, Base64.NO_WRAP)
-
-        // Strict format enforcement. Fails fast if it sees a legacy or corrupted payload.
         require(decoded.isNotEmpty() && decoded[0] == FORMAT_VERSION_1 && decoded.size >= 13) {
             "Invalid or legacy filename ciphertext format."
         }

@@ -70,13 +70,13 @@ object VaultCryptoEngine {
         val kekCipher = Cipher.getInstance(AES_GCM_TRANSFORMATION)
         kekCipher.init(Cipher.ENCRYPT_MODE, masterKey)
 
-        // 1. Authenticate envelope metadata using the Master Key's AAD
+        // Authenticate envelope metadata using the Master Key's AAD
         val aad = buildKekAad(ENVELOPE_VERSION, kekCipher.iv.size, dekCipher.iv.size, dekCipher.iv)
         kekCipher.updateAAD(aad)
 
         val encryptedDek = kekCipher.doFinal(dek.encoded)
 
-        // 2. Structure the Envelope
+        // Structure the Envelope
         val envelopeBuffer =
             ByteBuffer.allocate(4 + 4 + kekCipher.iv.size + 4 + encryptedDek.size + 4 + dekCipher.iv.size)
         envelopeBuffer.putInt(ENVELOPE_VERSION)
@@ -84,10 +84,10 @@ object VaultCryptoEngine {
         envelopeBuffer.putInt(encryptedDek.size).put(encryptedDek)
         envelopeBuffer.putInt(dekCipher.iv.size).put(dekCipher.iv)
 
-        // 3. Write the envelope to disk
+        // Write the envelope to disk
         outputStream.write(envelopeBuffer.array())
 
-        // 4. Initialize stream and header
+        // Initialize stream and header
         val cipherOut = CipherOutputStream(outputStream, dekCipher)
         VaultHeaderManager.writeHeaderToStream(cipherOut, fileName, mimeType)
 

@@ -53,7 +53,6 @@ class CallBlockerViewModel @Inject constructor(
     val uiEvent = _uiEvent.asSharedFlow()
 
     init {
-        // Observe DB changes and merge them seamlessly into our single UI State
         viewModelScope.launch {
             combine(
                 dao.getRulesByTypeFlow(RuleType.WHITELIST),
@@ -201,7 +200,6 @@ class CallBlockerViewModel @Inject constructor(
         }
     }
 
-    // Added function to handle clearing the database
     private fun clearAllRules() {
         viewModelScope.launch(Dispatchers.IO) {
             try {

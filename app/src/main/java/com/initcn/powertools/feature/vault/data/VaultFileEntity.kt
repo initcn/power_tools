@@ -9,7 +9,7 @@ import java.util.UUID
 data class VaultFileEntity(
     @PrimaryKey
     @ColumnInfo(name = "id")
-    val id: String = UUID.randomUUID().toString(), // Strictly UUID now
+    val id: String = UUID.randomUUID().toString(),
 
     @ColumnInfo(name = "encryptedName")
     val encryptedName: String,

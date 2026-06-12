@@ -2,7 +2,7 @@ package com.initcn.powertools.feature.callblocker.domain
 
 import com.initcn.powertools.feature.callblocker.data.CallRuleEntity
 
-// 1. Define the possible outcomes
+// Define the possible outcomes
 sealed interface CallResult {
     data class Allow(val reason: String) : CallResult
     data class Block(val reason: String) : CallResult
@@ -15,10 +15,7 @@ class CallEvaluator {
         return input?.filter { it.isDigit() } ?: ""
     }
 
-    /**
-     * Evaluates an incoming call against all user rules.
-     * @return CallResult.Block if the call should be rejected, CallResult.Allow otherwise.
-     */
+    // Evaluates an incoming call against all user rules.
     fun evaluateCall(
         incomingNumber: String?,
         isSavedContact: Boolean,
@@ -53,7 +50,6 @@ class CallEvaluator {
 
         // Priority Four: Regex Blocklist
         // NOTE: Regex cannot be normalized by stripping digits,
-        // we keep the raw pattern for regex matching.
         val isRegexBlocked = regexBlocklist.any { rule ->
             try {
                 Regex(rule.pattern).containsMatchIn(incomingNumber ?: "")

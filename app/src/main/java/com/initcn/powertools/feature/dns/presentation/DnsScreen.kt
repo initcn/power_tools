@@ -22,33 +22,48 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.initcn.powertools.R
-import com.initcn.powertools.core.permissions.PermissionChecker
+import com.initcn.powertools.core.permissions.RequiredPermission
 import com.initcn.powertools.core.theme.Dimens
+import com.initcn.powertools.core.ui.components.FeaturePermissionGuard
 import com.initcn.powertools.core.ui.components.PowerToolScaffold
 import com.initcn.powertools.core.ui.components.StatusMessage
 import com.initcn.powertools.feature.dns.domain.DnsProvider
 
+// ROUTE
+// Handles Hilt, Context, Permissions, and Lifecycle.
+
+@Composable
+fun DnsRoute(
+    onNavigateBack: () -> Unit,
+    viewModel: DnsViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    FeaturePermissionGuard(
+        requiredPermissions = listOf(RequiredPermission.WRITE_SECURE_SETTINGS),
+        onNavigateBack = onNavigateBack
+    ) {
+        DnsScreen(
+            state = state,
+            onEvent = viewModel::onEvent
+        )
+    }
+}
+
+// SCREEN
+// Pure UI representation.
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DnsScreen(
-    viewModel: DnsViewModel = hiltViewModel()
+    state: DnsUiState,
+    onEvent: (DnsEvent) -> Unit
 ) {
-    val context = LocalContext.current
-
-    val hasWriteSecureSettings = remember {
-        PermissionChecker.hasWriteSecureSettings(context)
-    }
-
-    // Single source of truth
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-
     val dnsApplyFailed = stringResource(R.string.dns_apply_failed)
     val dnsAppliedTemplate = stringResource(R.string.dns_applied)
 
@@ -70,28 +85,6 @@ fun DnsScreen(
                 style = MaterialTheme.typography.bodyLarge
             )
 
-            if (!hasWriteSecureSettings) {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.padding(Dimens.MD),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.SM)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.adb_permission_required),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.dns_permission_description),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.adb_grant_command),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            }
-
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column {
                     DnsProvider.entries.forEach { provider ->
@@ -108,14 +101,14 @@ fun DnsScreen(
                                 RadioButton(
                                     selected = state.selectedProvider == provider,
                                     onClick = {
-                                        viewModel.onEvent(DnsEvent.ClearStatusMessage)
-                                        viewModel.onEvent(DnsEvent.SelectProvider(provider))
+                                        onEvent(DnsEvent.ClearStatusMessage)
+                                        onEvent(DnsEvent.SelectProvider(provider))
                                     }
                                 )
                             },
                             modifier = Modifier.clickable {
-                                viewModel.onEvent(DnsEvent.ClearStatusMessage)
-                                viewModel.onEvent(DnsEvent.SelectProvider(provider))
+                                onEvent(DnsEvent.ClearStatusMessage)
+                                onEvent(DnsEvent.SelectProvider(provider))
                             }
                         )
                     }
@@ -125,7 +118,7 @@ fun DnsScreen(
             if (state.selectedProvider == DnsProvider.CUSTOM) {
                 OutlinedTextField(
                     value = state.customHostname,
-                    onValueChange = { viewModel.onEvent(DnsEvent.UpdateCustomHostname(it)) },
+                    onValueChange = { onEvent(DnsEvent.UpdateCustomHostname(it)) },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.custom_dns_hostname)) },
                     placeholder = { Text(stringResource(R.string.custom_dns_placeholder)) },
@@ -146,7 +139,7 @@ fun DnsScreen(
                                     supportingContent = { Text(provider.hostname) },
                                     trailingContent = {
                                         IconButton(
-                                            onClick = { viewModel.onEvent(DnsEvent.DeleteSavedProvider(provider.id)) }
+                                            onClick = { onEvent(DnsEvent.DeleteSavedProvider(provider.id)) }
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Close,
@@ -157,8 +150,8 @@ fun DnsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            viewModel.onEvent(DnsEvent.ClearStatusMessage)
-                                            viewModel.onEvent(DnsEvent.SelectSavedProvider(provider))
+                                            onEvent(DnsEvent.ClearStatusMessage)
+                                            onEvent(DnsEvent.SelectSavedProvider(provider))
                                         }
                                 )
                             }
@@ -171,12 +164,13 @@ fun DnsScreen(
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                enabled = hasWriteSecureSettings,
                 onClick = {
-                    viewModel.onEvent(DnsEvent.ApplyDns(
-                        successMessageTemplate = dnsAppliedTemplate,
-                        failureMessage = dnsApplyFailed
-                    ))
+                    onEvent(
+                        DnsEvent.ApplyDns(
+                            successMessageTemplate = dnsAppliedTemplate,
+                            failureMessage = dnsApplyFailed
+                        )
+                    )
                 }
             ) {
                 Text(text = stringResource(R.string.apply_dns))

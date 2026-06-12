@@ -87,26 +87,32 @@ class PowerCallScreeningService : CallScreeningService() {
 
         val responseBuilder = CallResponse.Builder()
 
+        // Determine the dynamic action string for the notification
+        var actionTaken = "Blocked"
+
         if (disallow) {
             responseBuilder.setDisallowCall(true)
             responseBuilder.setRejectCall(reject)
-            responseBuilder.setSkipNotification(skipNotif) // Hides the standard "Missed Call" system alert
+            responseBuilder.setSkipNotification(skipNotif)
             responseBuilder.setSkipCallLog(false)
+
+            actionTaken = if (reject) "Rejected" else "Disallowed"
         } else if (silence) {
             responseBuilder.setDisallowCall(false)
             responseBuilder.setSilenceCall(true)
+
+            actionTaken = "Silenced"
         }
 
         respondToCall(callDetails, responseBuilder.build())
 
-        // Trigger our custom app notification unless the user explicitly disabled all notifications
         if (!skipNotif) {
-            val phoneNumber = callDetails.handle?.schemeSpecificPart ?: "Unknown"
-            showBlockedCallNotification(phoneNumber, reason)
+            val phoneNumber = callDetails.handle?.schemeSpecificPart ?: "Unknown Number"
+            showBlockedCallNotification(phoneNumber, reason, actionTaken)
         }
     }
 
-    private fun showBlockedCallNotification(phoneNumber: String, reason: String) {
+    private fun showBlockedCallNotification(phoneNumber: String, reason: String, actionTaken: String) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "powertools_call_blocker"
 
@@ -122,8 +128,8 @@ class PowerCallScreeningService : CallScreeningService() {
         val notification = NotificationCompat.Builder(this, channelId)
             // Note: Change this icon to your app's actual drawable icon if necessary!
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Call Intercepted")
-            .setContentText("Blocked $phoneNumber ($reason)")
+            .setContentTitle("Call $actionTaken") // e.g., "Call Silenced" or "Call Disallowed"
+            .setContentText("$actionTaken $phoneNumber ($reason)") // e.g., "Silenced 1234567890 (Exact Match)"
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .build()

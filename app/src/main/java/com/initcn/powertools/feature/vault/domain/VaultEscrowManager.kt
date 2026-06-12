@@ -61,9 +61,8 @@ object VaultEscrowManager {
         Arrays.fill(derivedKeyBytes, 0.toByte())
     }
 
-    /**
-     * Reads, verifies, and restores the master key from the provided stream.
-     */
+    // Reads, verifies, and restores the master key from the provided stream.
+
     fun restoreFromStream(inputStream: InputStream, pin: String): SecretKey? {
         return try {
             val version: Int
