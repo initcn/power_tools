@@ -1,6 +1,7 @@
 package com.initcn.powertools.core.permissions
 
 import android.Manifest
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -54,6 +55,11 @@ object PermissionChecker {
         }
     }
 
+    // --- ADD THIS NEW FUNCTION ---
+    fun hasNotificationPolicyAccess(context: Context): Boolean {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        return notificationManager.isNotificationPolicyAccessGranted
+    }
 
     fun getMissingPermissions(context: Context): List<RequiredPermission> {
         val missing = mutableListOf<RequiredPermission>()

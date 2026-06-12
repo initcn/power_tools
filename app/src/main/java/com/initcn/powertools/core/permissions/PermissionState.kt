@@ -42,6 +42,11 @@ enum class RequiredPermission(
         title = "Notifications",
         description = "Required to send alerts and background service statuses.",
         manifestString = Manifest.permission.POST_NOTIFICATIONS
+    ),
+    ACCESS_NOTIFICATION_POLICY(
+        title = "Do Not Disturb Access",
+        description = "Required to switch the phone into Silence or DND when flipped.",
+        settingsAction = Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS
     );
 
     fun checkIsGranted(context: Context): Boolean {
@@ -52,6 +57,7 @@ enum class RequiredPermission(
             READ_CALL_LOG -> PermissionChecker.hasCallLogAccess(context)
             READ_CONTACTS -> PermissionChecker.hasContactsAccess(context)
             POST_NOTIFICATIONS -> PermissionChecker.hasPostNotifications(context)
+            ACCESS_NOTIFICATION_POLICY -> PermissionChecker.hasNotificationPolicyAccess(context)
         }
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.EnhancedEncryption
 import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.initcn.powertools.core.navigation.Routes
 
@@ -49,5 +50,12 @@ enum class PowerTool(
         title = "Call Blocker",
         description = "Advanced call screening, regex blocking, and precise whitelisting.",
         icon = Icons.Outlined.Block
+    ),
+
+    FLIP_ACTION(
+    route = Routes.FLIP_ACTION,
+    title = "Flip to Action",
+    description = "Silence or DND by flipping your phone face down.",
+    icon = Icons.Outlined.Vibration
     )
 }

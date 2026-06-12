@@ -10,6 +10,7 @@ import com.initcn.powertools.feature.callblocker.presentation.CallBlockerRoute
 import com.initcn.powertools.feature.dns.presentation.DnsRoute
 import com.initcn.powertools.feature.downloadsorganizer.presentation.DownloadsRoute
 import com.initcn.powertools.feature.doze.presentation.DozeRoute
+import com.initcn.powertools.feature.flipaction.presentation.FlipActionRoute
 import com.initcn.powertools.feature.home.presentation.HomeScreen
 import com.initcn.powertools.feature.vault.presentation.VaultRoute
 
@@ -59,6 +60,9 @@ fun AppNavigation() {
 
         composable(route = Routes.CALL_BLOCKER) {
             CallBlockerRoute(onNavigateBack = { navController.popBackStack() })
+        }
+        composable(route = Routes.FLIP_ACTION) {
+            FlipActionRoute(onNavigateBack = { navController.popBackStack() })
         }
     }
 }
