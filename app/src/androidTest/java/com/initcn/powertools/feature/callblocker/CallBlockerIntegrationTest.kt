@@ -6,7 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.initcn.powertools.feature.callblocker.data.CallBlockerPrefs
 import com.initcn.powertools.feature.callblocker.data.CallRuleDao
-import com.initcn.powertools.feature.callblocker.data.CallRuleDao // Adjust to your actual DB class name
 import com.initcn.powertools.feature.callblocker.data.CallRuleEntity
 import com.initcn.powertools.feature.callblocker.domain.CallEvaluator
 import com.initcn.powertools.feature.callblocker.domain.CallResult

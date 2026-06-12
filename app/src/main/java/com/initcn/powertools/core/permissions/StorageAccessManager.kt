@@ -3,8 +3,8 @@ package com.initcn.powertools.core.permissions
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.core.net.toUri
 import androidx.core.content.edit
+import androidx.core.net.toUri
 
 object StorageAccessManager {
     private const val PREFS_NAME = "storage_access_prefs"

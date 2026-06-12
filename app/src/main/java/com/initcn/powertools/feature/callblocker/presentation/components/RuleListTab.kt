@@ -32,7 +32,10 @@ fun RuleListTab(
             Text("No rules found.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     } else {
-        LazyColumn(contentPadding = PaddingValues(bottom = Dimens.ListBottomFabClearance)) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(), // <-- Added this modifier
+            contentPadding = PaddingValues(bottom = Dimens.ListBottomFabClearance)
+        ) {
             items(rules, key = { it.id }) { rule ->
                 ListItem(
                     headlineContent = { Text(rule.pattern, fontWeight = FontWeight.Bold) },
