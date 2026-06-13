@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.initcn.powertools.R
 import androidx.compose.ui.text.font.FontFamily
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -52,7 +54,7 @@ fun FeaturePermissionGuard(
         permissionCheckTrigger++
         onPauseOrDispose { }
     }
-    
+
     val missingPermission = remember(permissionCheckTrigger, requiredPermissions) {
         requiredPermissions.firstOrNull { !it.checkIsGranted(context) }
     }
@@ -63,10 +65,10 @@ fun FeaturePermissionGuard(
 
     if (missingPermission != null) {
         PowerAlertDialog(
-            title = missingPermission.title,
+            title = stringResource(missingPermission.titleRes),
             icon = Icons.Default.Security,
-            confirmText = if (missingPermission.adbCommand != null) "I Understand" else "Grant Permission",
-            dismissText = "Go Back",
+            confirmText = if (missingPermission.adbCommand != null) stringResource(R.string.i_understand) else stringResource(R.string.grant_permission),
+            dismissText = stringResource(R.string.go_back), // Fixed hardcoded string here
             onConfirm = {
                 when {
                     missingPermission.manifestString != null -> {
@@ -91,12 +93,15 @@ fun FeaturePermissionGuard(
             },
             onDismiss = onNavigateBack,
             content = {
+                // Resolve the string resource inside the composable scope
+                val copyToastMessage = stringResource(R.string.command_copied_clipboard)
+
                 Column(verticalArrangement = Arrangement.spacedBy(Dimens.SM)) {
-                    Text(text = missingPermission.description)
+                    Text(text = stringResource(missingPermission.descriptionRes))
                     if (missingPermission.adbCommand != null) {
                         Spacer(modifier = Modifier.height(Dimens.SM))
                         Text(
-                            text = "Execute via ADB:",
+                            text = stringResource(R.string.execute_via_adb),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -120,15 +125,15 @@ fun FeaturePermissionGuard(
                                 )
                                 IconButton(
                                     onClick = {
-                                        // Use native Android ClipboardManager
                                         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                         val clip = ClipData.newPlainText("ADB Command", missingPermission.adbCommand)
                                         clipboardManager.setPrimaryClip(clip)
 
-                                        Toast.makeText(context, "Command copied to clipboard", Toast.LENGTH_SHORT).show()
+                                        // Use the safely resolved string here
+                                        Toast.makeText(context, copyToastMessage, Toast.LENGTH_SHORT).show()
                                     }
                                 ) {
-                                    Icon(Icons.Default.ContentCopy, contentDescription = "Copy Command")
+                                    Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.copy_command))
                                 }
                             }
                         }

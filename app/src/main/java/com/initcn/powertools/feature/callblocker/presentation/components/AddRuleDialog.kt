@@ -35,8 +35,8 @@ fun AddRuleDialog(
     var selectedType by remember { mutableStateOf(initialType) }
 
     PowerAlertDialog(
-        title = "Add Rule",
-        confirmText = "Save",
+        title = stringResource(R.string.add_rule),
+        confirmText = stringResource(R.string.save),
         onDismiss = onDismiss,
         onConfirm = {
             if (pattern.isNotBlank()) onConfirm(

@@ -161,9 +161,12 @@ class FlipActionManager @Inject constructor(
 
     // --- MERGED DOMAIN MODEL ---
 
-    enum class FlipMode(val title: String, val description: String) {
-        SILENCE("Silence Ringer", "Mutes incoming calls and notifications."),
-        VIBRATE("Vibrate Only", "Sets the phone to vibrate for calls and alerts."),
-        DND("Do Not Disturb", "Blocks all visual and audio interruptions.")
+    enum class FlipMode(
+        @androidx.annotation.StringRes val titleRes: Int,
+        @androidx.annotation.StringRes val descriptionRes: Int
+    ) {
+        SILENCE(com.initcn.powertools.R.string.flip_mode_silence_title, com.initcn.powertools.R.string.flip_mode_silence_desc),
+        VIBRATE(com.initcn.powertools.R.string.flip_mode_vibrate_title, com.initcn.powertools.R.string.flip_mode_vibrate_desc),
+        DND(com.initcn.powertools.R.string.flip_mode_dnd_title, com.initcn.powertools.R.string.flip_mode_dnd_desc)
     }
 }

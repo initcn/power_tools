@@ -1,6 +1,7 @@
 package com.initcn.powertools.feature.vault.presentation
 
 import android.net.Uri
+import com.initcn.powertools.core.utils.UiText
 import com.initcn.powertools.feature.vault.data.VaultFileEntity
 
 sealed class VaultEvent {
@@ -10,8 +11,8 @@ sealed class VaultEvent {
     data class ToggleKeyRotation(val show: Boolean) : VaultEvent()
     data class ToggleDeleteDialog(val show: Boolean) : VaultEvent()
     data class ToggleFileDeleteDialog(val file: VaultFileEntity?) : VaultEvent()
-    data class SetError(val message: String?) : VaultEvent()
-    data class ImportFile(val uri: Uri) : VaultEvent() // Added this line
+    data class SetError(val message: UiText?) : VaultEvent()
+    data class ImportFile(val uri: Uri) : VaultEvent()
 
     object ClearError : VaultEvent()
     object LockVault : VaultEvent()

@@ -1,5 +1,6 @@
 package com.initcn.powertools.feature.home.domain
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Block
@@ -9,53 +10,18 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.initcn.powertools.core.navigation.Routes
+import com.initcn.powertools.R
 
 enum class PowerTool(
     val route: String,
-    val title: String,
-    val description: String,
+    @StringRes val titleRes: Int,
+    @StringRes val descriptionRes: Int,
     val icon: ImageVector
 ) {
-
-    DOZE(
-        route = Routes.DOZE,
-        title = "Screen Doze",
-        description = "Override screen timeout duration.",
-        icon = Icons.Outlined.Bedtime
-    ),
-
-    DNS(
-        route = Routes.DNS,
-        title = "DNS Switcher",
-        description = "Quickly switch between DNS providers.",
-        icon = Icons.Outlined.Dns
-    ),
-
-    DOWNLOADS(
-        route = Routes.DOWNLOADS,
-        title = "Downloads Organizer",
-        description = "Sort Downloads folder by file type.",
-        icon = Icons.Outlined.Folder
-    ),
-
-    SECURE_VAULT(
-        route = Routes.VAULT_AUTH,
-        title = "Secure Vault",
-        description = "Hardware-encrypted virtual sandbox for sensitive files.",
-        icon = Icons.Outlined.EnhancedEncryption
-    ),
-
-    CALL_BLOCKER(
-        route = Routes.CALL_BLOCKER,
-        title = "Call Blocker",
-        description = "Advanced call screening, regex blocking, and precise whitelisting.",
-        icon = Icons.Outlined.Block
-    ),
-
-    FLIP_ACTION(
-    route = Routes.FLIP_ACTION,
-    title = "Flip to Action",
-    description = "Silence or DND by flipping your phone face down.",
-    icon = Icons.Outlined.Vibration
-    )
+    DOZE(Routes.DOZE, R.string.tool_doze_title, R.string.tool_doze_desc, Icons.Outlined.Bedtime),
+    DNS(Routes.DNS, R.string.tool_dns_title, R.string.tool_dns_desc, Icons.Outlined.Dns),
+    DOWNLOADS(Routes.DOWNLOADS, R.string.tool_downloads_title, R.string.tool_downloads_desc, Icons.Outlined.Folder),
+    SECURE_VAULT(Routes.VAULT_AUTH, R.string.tool_vault_title, R.string.tool_vault_desc, Icons.Outlined.EnhancedEncryption),
+    CALL_BLOCKER(Routes.CALL_BLOCKER, R.string.tool_call_blocker_title, R.string.tool_call_blocker_desc, Icons.Outlined.Block),
+    FLIP_ACTION(Routes.FLIP_ACTION, R.string.tool_flip_title, R.string.tool_flip_desc, Icons.Outlined.Vibration)
 }

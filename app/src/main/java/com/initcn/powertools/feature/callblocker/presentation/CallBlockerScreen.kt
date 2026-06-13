@@ -38,15 +38,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.initcn.powertools.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.initcn.powertools.R
 import com.initcn.powertools.core.permissions.RequiredPermission
 import com.initcn.powertools.core.theme.Dimens
 import com.initcn.powertools.core.ui.components.FeaturePermissionGuard
 import com.initcn.powertools.core.ui.components.PowerToolScaffold
+import com.initcn.powertools.core.utils.UiText
 import com.initcn.powertools.feature.callblocker.domain.RuleType
 import com.initcn.powertools.feature.callblocker.presentation.components.AddRuleDialog
 import com.initcn.powertools.feature.callblocker.presentation.components.CallBlockerSettingsTab
@@ -88,7 +89,8 @@ fun CallBlockerRoute(
 
         LaunchedEffect(Unit) {
             viewModel.uiEvent.collect { message ->
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                // Resolve the UiText to an actual String using .asString(context)
+                Toast.makeText(context, message.asString(context), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -145,19 +147,24 @@ fun CallBlockerScreen(
                         Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.width(Dimens.MD))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Call Screening Disabled", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
-                            Text("Tap to set PowerTools as default to enable active system level call blocking.", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.call_screening_disabled), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.call_screening_disabled_desc), style = MaterialTheme.typography.bodySmall)
                         }
                         Button(
                             onClick = onRequestRole,
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                        ) { Text("Enable") }
+                        ) { Text(stringResource(R.string.enable)) }
                     }
                 }
             }
 
             PrimaryTabRow(selectedTabIndex = pagerState.currentPage) {
-                val tabs = listOf("Recent", "Blocklist", "Whitelist", "Settings")
+                val tabs = listOf(
+                    stringResource(R.string.tab_recent),
+                    stringResource(R.string.tab_blocklist),
+                    stringResource(R.string.tab_whitelist),
+                    stringResource(R.string.tab_settings)
+                )
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = pagerState.currentPage == index,

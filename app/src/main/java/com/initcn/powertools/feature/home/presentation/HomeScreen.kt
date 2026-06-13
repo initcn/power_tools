@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import com.initcn.powertools.core.theme.Dimens
 import com.initcn.powertools.core.ui.components.PowerCard
 import com.initcn.powertools.core.utils.AppInfo
@@ -47,8 +48,8 @@ fun HomeScreen(
             ) { tool ->
 
                 PowerCard(
-                    title = tool.title,
-                    subtitle = tool.description,
+                    title = stringResource(tool.titleRes),
+                    subtitle = stringResource(tool.descriptionRes),
                     icon = tool.icon,
                     onClick = {
                         onToolSelected(tool)

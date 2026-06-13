@@ -2,6 +2,8 @@ package com.initcn.powertools.feature.downloadsorganizer.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.initcn.powertools.R
+import com.initcn.powertools.core.utils.UiText
 import com.initcn.powertools.feature.downloadsorganizer.domain.DownloadsOrganizer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -25,18 +27,18 @@ class DownloadsViewModel @Inject constructor(
             is DownloadsEvent.SetStatusMessage -> {
                 _uiState.update { it.copy(statusMessage = event.message) }
             }
-            is DownloadsEvent.PreviewChanges -> previewChanges(event.noFilesMsg, event.filesReadyTemplate)
-            is DownloadsEvent.OrganizeDownloads -> organizeDownloads(event.filesMovedTemplate)
+            is DownloadsEvent.PreviewChanges -> previewChanges()
+            is DownloadsEvent.OrganizeDownloads -> organizeDownloads()
         }
     }
 
-    private fun previewChanges(noFilesMsg: String, filesReadyTemplate: String) {
+    private fun previewChanges() {
         viewModelScope.launch(Dispatchers.IO) {
             val operations = downloadsOrganizer.preview()
             val newMessage = if (operations.isEmpty()) {
-                noFilesMsg
+                UiText.StringResource(R.string.downloads_no_files)
             } else {
-                filesReadyTemplate.format(operations.size)
+                UiText.StringResource(R.string.downloads_files_ready, operations.size)
             }
             _uiState.update {
                 it.copy(
@@ -49,7 +51,7 @@ class DownloadsViewModel @Inject constructor(
         }
     }
 
-    private fun organizeDownloads(filesMovedTemplate: String) {
+    private fun organizeDownloads() {
         _uiState.update { it.copy(isOrganizing = true, moveLogs = emptyList()) }
         viewModelScope.launch(Dispatchers.IO) {
             val movedCount = downloadsOrganizer.organize { logMsg ->
@@ -59,7 +61,7 @@ class DownloadsViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isOrganizing = false,
-                    statusMessage = filesMovedTemplate.format(movedCount),
+                    statusMessage = UiText.StringResource(R.string.files_moved, movedCount),
                     liveFiles = downloadsOrganizer.preview() // Refresh the view once done
                 )
             }

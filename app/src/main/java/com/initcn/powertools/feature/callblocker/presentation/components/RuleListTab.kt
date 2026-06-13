@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.initcn.powertools.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.initcn.powertools.core.theme.Dimens
@@ -29,19 +31,21 @@ fun RuleListTab(
 ) {
     if (rules.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No rules found.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.no_rules_found), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     } else {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(), // <-- Added this modifier
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = Dimens.ListBottomFabClearance)
         ) {
             items(rules, key = { it.id }) { rule ->
+                val typeText = if (rule.ruleType == RuleType.BLOCKLIST_REGEX) stringResource(R.string.regex_pattern) else stringResource(R.string.exact_match)
+
                 ListItem(
                     headlineContent = { Text(rule.pattern, fontWeight = FontWeight.Bold) },
                     supportingContent = {
                         Text(buildString {
-                            append(if (rule.ruleType == RuleType.BLOCKLIST_REGEX) "Regex Pattern" else "Exact Match")
+                            append(typeText)
                             if (!rule.label.isNullOrBlank()) append(" • ${rule.label}")
                         })
                     },

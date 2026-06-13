@@ -11,7 +11,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.initcn.powertools.R
 import com.initcn.powertools.core.permissions.PermissionChecker
+import com.initcn.powertools.core.utils.UiText
 import com.initcn.powertools.feature.callblocker.data.CallBlockerPrefs
 import com.initcn.powertools.feature.callblocker.data.CallRuleDao
 import com.initcn.powertools.feature.callblocker.data.CallRuleEntity
@@ -51,7 +53,8 @@ class CallBlockerViewModel @Inject constructor(
     )
     val uiState: StateFlow<CallBlockerUiState> = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<String>()
+    // Upgraded to emit UiText instead of hardcoded Strings
+    private val _uiEvent = MutableSharedFlow<UiText>()
     val uiEvent = _uiEvent.asSharedFlow()
 
     init {
@@ -133,12 +136,12 @@ class CallBlockerViewModel @Inject constructor(
                     context.contentResolver.openOutputStream(uri)?.use {
                         it.write(json.toByteArray(Charsets.UTF_8))
                     }
-                    _uiEvent.emit("Exported successfully to Downloads folder.")
+                    _uiEvent.emit(UiText.StringResource(R.string.success_export))
                 } else {
-                    _uiEvent.emit("Failed to create file in Downloads.")
+                    _uiEvent.emit(UiText.StringResource(R.string.error_export_create))
                 }
             } catch (e: Exception) {
-                _uiEvent.emit("Failed to export rules.")
+                _uiEvent.emit(UiText.StringResource(R.string.error_export))
             }
         }
     }
@@ -155,12 +158,12 @@ class CallBlockerViewModel @Inject constructor(
 
                 if (rules.isNotEmpty()) {
                     dao.insertRules(rules)
-                    _uiEvent.emit("Successfully imported ${rules.size} rules.")
+                    _uiEvent.emit(UiText.StringResource(R.string.success_import, rules.size))
                 } else {
-                    _uiEvent.emit("No rules found in backup file.")
+                    _uiEvent.emit(UiText.StringResource(R.string.error_import_empty))
                 }
             } catch (e: Exception) {
-                _uiEvent.emit("Failed to import. Invalid file format.")
+                _uiEvent.emit(UiText.StringResource(R.string.error_import_format))
             }
         }
     }
@@ -244,9 +247,9 @@ class CallBlockerViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 dao.deleteAllRules()
-                _uiEvent.emit("All rules have been cleared.")
+                _uiEvent.emit(UiText.StringResource(R.string.success_rules_cleared))
             } catch (e: Exception) {
-                _uiEvent.emit("Failed to clear rules.")
+                _uiEvent.emit(UiText.StringResource(R.string.error_rules_clear))
             }
         }
     }

@@ -1,7 +1,9 @@
 package com.initcn.powertools.feature.dns.presentation
 
 import androidx.lifecycle.ViewModel
+import com.initcn.powertools.R
 import com.initcn.powertools.core.AppPreferences
+import com.initcn.powertools.core.utils.UiText
 import com.initcn.powertools.feature.dns.domain.CustomDnsProvider
 import com.initcn.powertools.feature.dns.domain.DnsManager
 import com.initcn.powertools.feature.dns.domain.DnsProvider
@@ -57,11 +59,11 @@ class DnsViewModel @Inject constructor(
                 _uiState.update { it.copy(savedProviders = appPreferences.getCustomDnsProviders()) }
             }
             is DnsEvent.ClearStatusMessage -> _uiState.update { it.copy(statusMessage = null) }
-            is DnsEvent.ApplyDns -> applyDns(event.successMessageTemplate, event.failureMessage)
+            is DnsEvent.ApplyDns -> applyDns()
         }
     }
 
-    private fun applyDns(successMessageTemplate: String, failureMessage: String) {
+    private fun applyDns() {
         val hostname = _uiState.value.customHostname.trim()
         val provider = _uiState.value.selectedProvider
 
@@ -77,9 +79,11 @@ class DnsViewModel @Inject constructor(
                 )
                 _uiState.update { it.copy(savedProviders = appPreferences.getCustomDnsProviders()) }
             }
-            _uiState.update { it.copy(statusMessage = successMessageTemplate.format(provider.title)) }
+            // Emit success via UiText
+            _uiState.update { it.copy(statusMessage = UiText.StringResource(R.string.dns_applied, provider.title)) }
         } else {
-            _uiState.update { it.copy(statusMessage = failureMessage) }
+            // Emit failure via UiText
+            _uiState.update { it.copy(statusMessage = UiText.StringResource(R.string.dns_apply_failed)) }
         }
     }
 }

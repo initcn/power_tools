@@ -4,51 +4,52 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
+import androidx.annotation.StringRes
+import com.initcn.powertools.R
 
 @SuppressLint("InlinedApi")
 enum class RequiredPermission(
-    val title: String,
-    val description: String,
+    @StringRes val titleRes: Int,
+    @StringRes val descriptionRes: Int,
     val manifestString: String? = null,
     val settingsAction: String? = null,
     val adbCommand: String? = null
 ) {
     WRITE_SECURE_SETTINGS(
-        title = "Write Secure Settings",
-        description = "Required for DNS switching and advanced system controls. This must be granted via a computer.",
+        titleRes = R.string.perm_secure_title,
+        descriptionRes = R.string.perm_secure_desc,
         adbCommand = "adb shell pm grant com.initcn.powertools android.permission.WRITE_SECURE_SETTINGS"
     ),
     WRITE_SYSTEM_SETTINGS(
-        title = "Modify System Settings",
-        description = "Required to alter the device screen timeout duration.",
+        titleRes = R.string.perm_sys_title,
+        descriptionRes = R.string.perm_sys_desc,
         settingsAction = Settings.ACTION_MANAGE_WRITE_SETTINGS
     ),
     ALL_FILES_ACCESS(
-        title = "All Files Access",
-        description = "Required for Downloads Organizer to manage files in the global Downloads folder.",
+        titleRes = R.string.perm_files_title,
+        descriptionRes = R.string.perm_files_desc,
         settingsAction = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
     ),
     READ_CALL_LOG(
-        title = "Call Log Access",
-        description = "Required to display recent calls so you can quickly add them to your blocklist or whitelist.",
+        titleRes = R.string.perm_calllog_title,
+        descriptionRes = R.string.perm_calllog_desc,
         manifestString = Manifest.permission.READ_CALL_LOG
     ),
     READ_CONTACTS(
-        title = "Contacts Access",
-        description = "Required to identify and block unsaved numbers.",
+        titleRes = R.string.perm_contacts_title,
+        descriptionRes = R.string.perm_contacts_desc,
         manifestString = Manifest.permission.READ_CONTACTS
     ),
     POST_NOTIFICATIONS(
-        title = "Notifications",
-        description = "Required to send alerts and background service statuses.",
+        titleRes = R.string.perm_notif_title,
+        descriptionRes = R.string.perm_notif_desc,
         manifestString = Manifest.permission.POST_NOTIFICATIONS
     ),
     ACCESS_NOTIFICATION_POLICY(
-        title = "Do Not Disturb Access",
-        description = "Required to switch the phone into Silence or DND when flipped.",
+        titleRes = R.string.perm_dnd_title,
+        descriptionRes = R.string.perm_dnd_desc,
         settingsAction = Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS
     );
-
     fun checkIsGranted(context: Context): Boolean {
         return when (this) {
             WRITE_SECURE_SETTINGS -> PermissionChecker.hasWriteSecureSettings(context)

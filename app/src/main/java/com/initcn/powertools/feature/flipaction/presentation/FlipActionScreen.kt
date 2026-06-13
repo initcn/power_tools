@@ -33,6 +33,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.initcn.powertools.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -84,7 +86,7 @@ fun FlipActionScreen(
     onRequestBatteryExemption: () -> Unit,
     isBatteryOptimized: Boolean
 ) {
-    PowerToolScaffold(title = "Flip to Action") { paddingValues ->
+    PowerToolScaffold(title = stringResource(R.string.flip_to_action)) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,12 +111,12 @@ fun FlipActionScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Enable Flip Sensor",
+                            text = stringResource(R.string.enable_flip_sensor),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Place phone face down to trigger action.",
+                            text = stringResource(R.string.enable_flip_sensor_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -136,12 +138,12 @@ fun FlipActionScreen(
                 ) {
                     Column(modifier = Modifier.padding(Dimens.MD)) {
                         Text(
-                            text = "Background Execution Restricted",
+                            text = stringResource(R.string.bg_execution_restricted),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.error
                         )
                         Text(
-                            text = "Android will kill the flip sensor to save battery. Please exempt PowerTools from battery optimizations.",
+                            text = stringResource(R.string.bg_execution_desc),
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = Dimens.XS, bottom = Dimens.SM)
                         )
@@ -149,7 +151,7 @@ fun FlipActionScreen(
                             onClick = onRequestBatteryExemption,
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                         ) {
-                            Text("Exempt App")
+                            Text(stringResource(R.string.exempt_app))
                         }
                     }
                 }
@@ -167,18 +169,17 @@ fun FlipActionScreen(
                 ) {
                     Column(modifier = Modifier.padding(Dimens.MD)) {
                         Text(
-                            text = "Live Gravity Sensor Data",
+                            text = stringResource(R.string.live_sensor_data),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Spacer(modifier = Modifier.height(Dimens.SM))
 
-                        // FIX: Explicitly passing Locale.US to prevent comma/period formatting bugs
-                        Text("X-Axis (Left/Right Tilt): ${String.format(Locale.US, "%.2f", state.sensorData.x)}")
-                        Text("Y-Axis (Up/Down Tilt): ${String.format(Locale.US, "%.2f", state.sensorData.y)}")
+                        Text(stringResource(R.string.x_axis_data, String.format(Locale.US, "%.2f", state.sensorData.x)))
+                        Text(stringResource(R.string.y_axis_data, String.format(Locale.US, "%.2f", state.sensorData.y)))
 
                         Text(
-                            text = "Z-Axis (Face Up/Down): ${String.format(Locale.US, "%.2f", state.sensorData.z)}",
+                            text = stringResource(R.string.z_axis_data, String.format(Locale.US, "%.2f", state.sensorData.z)),
                             fontWeight = FontWeight.Bold,
                             color = if (state.sensorData.z < -6.0f) MaterialTheme.colorScheme.error
                             else MaterialTheme.colorScheme.onSecondaryContainer
@@ -188,7 +189,7 @@ fun FlipActionScreen(
             }
 
             Text(
-                text = "ACTION ON FLIP",
+                text = stringResource(R.string.action_on_flip),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = Dimens.LG, top = Dimens.MD, bottom = Dimens.XS)
@@ -225,11 +226,11 @@ fun FlipActionScreen(
                             Spacer(modifier = Modifier.width(Dimens.MD))
                             Column {
                                 Text(
-                                    text = mode.title,
+                                    text = stringResource(mode.titleRes),
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = mode.description,
+                                    text = stringResource(mode.descriptionRes),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.initcn.powertools.core.theme.Dimens
 import com.initcn.powertools.core.ui.components.PowerAlertDialog
+import com.initcn.powertools.core.utils.UiText
 import com.initcn.powertools.feature.vault.presentation.VaultEvent
 import com.initcn.powertools.feature.vault.presentation.VaultUiState
 
@@ -32,7 +33,7 @@ fun VaultSettingsTab(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Security",
+            text = stringResource(R.string.security),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = Dimens.MD, top = Dimens.MD, bottom = Dimens.XS)
@@ -71,9 +72,10 @@ fun VaultSettingsTab(
         state.errorMessage?.let {
             if (!state.isRotatingKey) { // Don't show it here if the dialog is open
                 Spacer(modifier = Modifier.height(Dimens.MD))
+                val text = it.asString()
                 Text(
-                    text = it,
-                    color = if (it.contains("success", true) || it.contains("updated", true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    text = text,
+                    color = if (text.contains("success", true) || text.contains("updated", true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(horizontal = Dimens.MD)
                 )
             }
@@ -83,10 +85,10 @@ fun VaultSettingsTab(
     // THE NEW KEY ROTATION POWER ALERT DIALOG
     if (state.isRotatingKey) {
         PowerAlertDialog(
-            title = "Rotate Master Password",
+            title = stringResource(R.string.rotate_master_password),
             icon = Icons.Default.Lock,
-            confirmText = if (state.isKeyRotationProcessing) "Processing..." else "Confirm",
-            dismissText = "Cancel",
+            confirmText = if (state.isKeyRotationProcessing) stringResource(R.string.processing) else stringResource(R.string.confirm),
+            dismissText = stringResource(R.string.cancel),
             onDismiss = {
                 if (!state.isKeyRotationProcessing) {
                     onEvent(VaultEvent.ToggleKeyRotation(false))
@@ -95,7 +97,7 @@ fun VaultSettingsTab(
             },
             onConfirm = {
                 if (state.newPinInput.length >= 4) onEvent(VaultEvent.RotateMasterKey)
-                else onEvent(VaultEvent.SetError("Password must be at least 4 digits."))
+                else onEvent(VaultEvent.SetError(UiText.StringResource(R.string.error_pin_length)))
             },
             content = {
                 Column(
@@ -103,14 +105,14 @@ fun VaultSettingsTab(
                     verticalArrangement = Arrangement.spacedBy(Dimens.SM)
                 ) {
                     Text(
-                        "This will generate a new cryptographic Master Key and update all file headers. The actual file contents will not need to be re-encrypted.",
+                        stringResource(R.string.rotate_key_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     OutlinedTextField(
                         value = state.newPinInput,
                         onValueChange = { onEvent(VaultEvent.UpdateNewPinInput(it)) },
-                        label = { Text("Enter New Password") },
+                        label = { Text(stringResource(R.string.enter_new_password)) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !state.isKeyRotationProcessing // Disable typing while processing
@@ -121,14 +123,14 @@ fun VaultSettingsTab(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(modifier = Modifier.size(Dimens.IconMD))
                             Spacer(modifier = Modifier.width(Dimens.SM))
-                            Text("Re-encrypting headers...", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.reencrypting_headers), style = MaterialTheme.typography.bodyMedium)
                         }
                     }
 
                     // Show Errors inside the dialog
                     state.errorMessage?.let {
                         Text(
-                            text = it,
+                            text = it.asString(),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )

@@ -1,6 +1,8 @@
 package com.initcn.powertools.feature.doze.presentation
 
 import androidx.lifecycle.ViewModel
+import com.initcn.powertools.R
+import com.initcn.powertools.core.utils.UiText
 import com.initcn.powertools.feature.doze.domain.DozeManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +36,13 @@ class DozeViewModel @Inject constructor(
             is DozeEvent.ApplyTimeout -> {
                 val success = dozeManager.applyTimeout(_uiState.value.selectedLabel)
                 _uiState.update {
-                    it.copy(statusMessage = if (success) event.successMessage else event.failureMessage)
+                    it.copy(
+                        statusMessage = if (success) {
+                            UiText.StringResource(R.string.timeout_success)
+                        } else {
+                            UiText.StringResource(R.string.timeout_failed)
+                        }
+                    )
                 }
             }
         }

@@ -34,9 +34,6 @@ import com.initcn.powertools.core.ui.components.PowerToolScaffold
 import com.initcn.powertools.core.ui.components.StatusMessage
 import com.initcn.powertools.feature.dns.domain.DnsProvider
 
-// ROUTE
-// Handles Hilt, Context, Permissions, and Lifecycle.
-
 @Composable
 fun DnsRoute(
     onNavigateBack: () -> Unit,
@@ -55,18 +52,12 @@ fun DnsRoute(
     }
 }
 
-// SCREEN
-// Pure UI representation.
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DnsScreen(
     state: DnsUiState,
     onEvent: (DnsEvent) -> Unit
 ) {
-    val dnsApplyFailed = stringResource(R.string.dns_apply_failed)
-    val dnsAppliedTemplate = stringResource(R.string.dns_applied)
-
     PowerToolScaffold(
         title = stringResource(R.string.dns_switcher)
     ) { paddingValues ->
@@ -160,18 +151,12 @@ fun DnsScreen(
                 }
             }
 
-            StatusMessage(message = state.statusMessage)
+            // Unpack the UiText back to a String securely in the composable
+            StatusMessage(message = state.statusMessage?.asString())
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    onEvent(
-                        DnsEvent.ApplyDns(
-                            successMessageTemplate = dnsAppliedTemplate,
-                            failureMessage = dnsApplyFailed
-                        )
-                    )
-                }
+                onClick = { onEvent(DnsEvent.ApplyDns) }
             ) {
                 Text(text = stringResource(R.string.apply_dns))
             }

@@ -10,5 +10,5 @@ sealed interface DnsEvent {
     data class DeleteSavedProvider(val providerId: Long) : DnsEvent
 
     data object ClearStatusMessage : DnsEvent
-    data class ApplyDns(val successMessageTemplate: String, val failureMessage: String) : DnsEvent
+    data object ApplyDns : DnsEvent
 }

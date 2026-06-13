@@ -1,5 +1,6 @@
 package com.initcn.powertools.feature.vault.presentation
 
+import com.initcn.powertools.core.utils.UiText
 import com.initcn.powertools.feature.vault.data.VaultFileEntity
 
 data class VaultUiState(
@@ -14,6 +15,6 @@ data class VaultUiState(
     val pinInput: String = "",
     val pinConfirmInput: String = "",
     val newPinInput: String = "",
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     val databaseFiles: List<VaultFileEntity> = emptyList()
 )

@@ -37,7 +37,7 @@ import com.initcn.powertools.feature.doze.domain.DozeManager
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun DozeRoute(
-    onNavigateBack: () -> Unit, // ADD THIS
+    onNavigateBack: () -> Unit,
     viewModel: DozeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -63,9 +63,6 @@ fun DozeScreen(
     supportedTimeouts: List<DozeManager.TimeoutOption>,
     onEvent: (DozeEvent) -> Unit
 ) {
-    val successMsg = stringResource(R.string.timeout_success)
-    val failureMsg = stringResource(R.string.timeout_failed)
-
     PowerToolScaffold(title = stringResource(R.string.screen_doze)) { paddingValues ->
         Column(
             modifier = Modifier
@@ -107,14 +104,15 @@ fun DozeScreen(
                 }
             }
 
+            // Safely unwrap the UiText here in the Compose UI
             StatusMessage(
-                message = state.statusMessage
+                message = state.statusMessage?.asString()
             )
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    onEvent(DozeEvent.ApplyTimeout(successMsg, failureMsg))
+                    onEvent(DozeEvent.ApplyTimeout) // Clean!
                 }
             ) {
                 Text(text = stringResource(R.string.apply_timeout))

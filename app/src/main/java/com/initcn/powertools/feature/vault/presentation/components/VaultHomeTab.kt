@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.initcn.powertools.R
 import androidx.compose.ui.text.style.TextOverflow
 import com.initcn.powertools.core.theme.Dimens
 import com.initcn.powertools.feature.vault.data.VaultFileEntity
@@ -31,7 +33,7 @@ fun VaultHomeTab(
     Box(modifier = Modifier.fillMaxSize()) {
         if (state.databaseFiles.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No secure items inside your vault catalog.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.vault_empty_catalog), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyColumn(

@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.IBinder
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
+import com.initcn.powertools.R
+import com.initcn.powertools.feature.flipaction.data.FlipActionPrefs
 import com.initcn.powertools.feature.flipaction.domain.FlipActionManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -16,6 +18,8 @@ import javax.inject.Inject
 class FlipSensorService : Service() {
 
     @Inject lateinit var manager: FlipActionManager
+    @Inject lateinit var prefs: FlipActionPrefs // <-- Injected the preferences
+
     private val notificationManager by lazy { getSystemService(NotificationManager::class.java) }
 
     // Create a scope tied to the Service lifecycle
@@ -58,17 +62,31 @@ class FlipSensorService : Service() {
     }
 
     private fun buildNotification(isActive: Boolean): Notification {
-        // Dynamically change text based on state
-        val title = if (isActive) "Device Silenced" else "Flip to Action"
-        val text = if (isActive) "Face-down mode is active." else "Monitoring for flip..."
+        // Read the actual selected mode from preferences
+        val currentMode = prefs.getSelectedMode()
 
-        // Dynamically change icon.
-        // NOTE: For production, you may want to replace these with your own custom R.drawable icons!
-        val iconRes = if (isActive) {
-            android.R.drawable.ic_lock_silent_mode_off // System Mute Icon
+        // Dynamically change text based on state and selected mode
+        val title = if (isActive) {
+            when (currentMode) {
+                FlipActionManager.FlipMode.SILENCE -> getString(R.string.notif_title_silenced)
+                FlipActionManager.FlipMode.VIBRATE -> getString(R.string.notif_title_vibrate)
+                FlipActionManager.FlipMode.DND -> getString(R.string.notif_title_dnd)
+            }
         } else {
-            android.R.drawable.ic_dialog_info // System Info Icon
+            getString(R.string.notif_title_monitoring)
         }
+
+        val text = if (isActive) {
+            when (currentMode) {
+                FlipActionManager.FlipMode.SILENCE -> getString(R.string.notif_desc_silenced)
+                FlipActionManager.FlipMode.VIBRATE -> getString(R.string.notif_desc_vibrate)
+                FlipActionManager.FlipMode.DND -> getString(R.string.notif_desc_dnd)
+            }
+        } else {
+            getString(R.string.notif_desc_monitoring)
+        }
+
+        val iconRes = R.drawable.ic_notification
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)

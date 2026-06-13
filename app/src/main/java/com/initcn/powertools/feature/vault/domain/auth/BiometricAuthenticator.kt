@@ -4,6 +4,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import com.initcn.powertools.R
 
 object BiometricAuthenticator {
 
@@ -30,13 +31,13 @@ object BiometricAuthenticator {
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    onError("Authentication failed.")
+                    onError(activity.getString(R.string.biometric_error_failed))
                 }
             })
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Unlock Storage Vault")
-            .setSubtitle("Use your fingerprint, face, or screen lock")
+            .setTitle(activity.getString(R.string.biometric_prompt_title))
+            .setSubtitle(activity.getString(R.string.biometric_prompt_subtitle))
             .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
             .build()
 

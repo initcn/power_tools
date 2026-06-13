@@ -219,7 +219,7 @@ fun RecentCallItem(
                 ) {
                     if (isBlocked) {
                         DropdownMenuItem(
-                            text = { Text("Remove from Blocklist", color = MaterialTheme.colorScheme.error) },
+                            text = { Text(stringResource(R.string.remove_from_blocklist), color = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 onRemoveRule(blockedRule)
                                 showMenu = false
@@ -227,7 +227,7 @@ fun RecentCallItem(
                         )
                     } else {
                         DropdownMenuItem(
-                            text = { Text("Block Number") },
+                            text = { Text(stringResource(R.string.block_number)) },
                             onClick = {
                                 onAddToRule(call.number, RuleType.BLOCKLIST_EXACT)
                                 showMenu = false
@@ -237,7 +237,7 @@ fun RecentCallItem(
 
                     if (isWhitelisted) {
                         DropdownMenuItem(
-                            text = { Text("Remove from Whitelist", color = MaterialTheme.colorScheme.error) },
+                            text = { Text(stringResource(R.string.remove_from_whitelist), color = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 onRemoveRule(whitelistedRule)
                                 showMenu = false
@@ -245,7 +245,7 @@ fun RecentCallItem(
                         )
                     } else {
                         DropdownMenuItem(
-                            text = { Text("Whitelist Number") },
+                            text = { Text(stringResource(R.string.whitelist_number)) },
                             onClick = {
                                 onAddToRule(call.number, RuleType.WHITELIST)
                                 showMenu = false
