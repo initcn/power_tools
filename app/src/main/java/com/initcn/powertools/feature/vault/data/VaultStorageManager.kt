@@ -54,7 +54,7 @@ class VaultStorageManager @Inject constructor(
                 ?: throw IllegalStateException("Vault folder access not granted.")
 
             // Create physical file via SAF
-            val targetFile = root.createFile("application/octet-stream", "$fileId.enc")
+            val targetFile = root.createFile("application/octet-stream", fileId)
                 ?: throw IllegalStateException("Failed to create file.")
 
             withContext(Dispatchers.IO) {

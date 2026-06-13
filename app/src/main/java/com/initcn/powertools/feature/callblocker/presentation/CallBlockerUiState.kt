@@ -7,6 +7,7 @@ data class CallBlockerUiState(
     val whitelist: List<CallRuleEntity> = emptyList(),
     val exactBlocklist: List<CallRuleEntity> = emptyList(),
     val regexBlocklist: List<CallRuleEntity> = emptyList(),
+    val blockAllCalls: Boolean = false,
     val blockHiddenNumbers: Boolean = false,
     val blockUnsavedContacts: Boolean = false,
     val disallowCall: Boolean = true,

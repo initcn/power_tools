@@ -6,8 +6,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DownloadsOrganizer @Inject constructor(
-) {
+class DownloadsOrganizer @Inject constructor() {
 
     data class MoveOperation(
         val sourcePath: String,
@@ -41,7 +40,28 @@ class DownloadsOrganizer @Inject constructor(
         return operations
     }
 
-    fun organize(): Int {
+    // Prevents overwriting by generating a unique name
+    private fun getUniqueTargetFile(targetFolder: File, originalName: String): File {
+        var targetFile = File(targetFolder, originalName)
+
+        // If the name is free, use it immediately
+        if (!targetFile.exists()) return targetFile
+
+        // Otherwise, split the name and extension to append a counter
+        val nameWithoutExtension = targetFile.nameWithoutExtension
+        val extension = targetFile.extension
+        val extWithDot = if (extension.isNotEmpty()) ".$extension" else ""
+
+        var counter = 1
+        while (targetFile.exists()) {
+            targetFile = File(targetFolder, "$nameWithoutExtension ($counter)$extWithDot")
+            counter++
+        }
+
+        return targetFile
+    }
+
+    fun organize(onMoveLog: (String) -> Unit): Int {
         val root = getDownloadsRoot() ?: return 0
         var movedCount = 0
 
@@ -51,24 +71,25 @@ class DownloadsOrganizer @Inject constructor(
                 val category = DownloadCategory.fromExtension(extension)
 
                 try {
-                    //  Find or create the target category folder
+                    // Find or create the target category folder
                     val targetFolder = File(root, category.folderName)
                     if (!targetFolder.exists()) {
                         targetFolder.mkdirs()
                     }
 
-                    // Move the file using native Java IO renameTo (lightning fast)
                     if (targetFolder.exists() && targetFolder.isDirectory) {
-                        val targetFile = File(targetFolder, file.name)
+                        val targetFile = getUniqueTargetFile(targetFolder, file.name)
 
                         // If file moved successfully
                         if (file.renameTo(targetFile)) {
                             movedCount++
+                            // Log the new name in case it had to be changed!
+                            onMoveLog("Moved: ${file.name} ➔ ${category.folderName}/${targetFile.name}")
                         }
                     }
                 } catch (e: Exception) {
-                    // Ignore failures (e.g., file lock, name collision)
                     e.printStackTrace()
+                    onMoveLog("Error: Failed to move ${file.name}")
                 }
             }
         }

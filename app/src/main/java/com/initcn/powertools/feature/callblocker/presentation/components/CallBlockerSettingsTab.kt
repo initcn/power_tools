@@ -24,6 +24,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.initcn.powertools.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.initcn.powertools.core.theme.Dimens
 import com.initcn.powertools.feature.callblocker.presentation.CallBlockerEvent
@@ -40,23 +42,31 @@ fun CallBlockerSettingsTab(
             .verticalScroll(rememberScrollState())
     ) {
         // FILTER TRIGGERS SECTION
+        // FILTER TRIGGERS SECTION
         Text(
-            text = "Block Triggers",
+            text = stringResource(R.string.block_triggers),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = Dimens.MD, top = Dimens.MD, bottom = Dimens.XS)
         )
 
         ListItem(
-            headlineContent = { Text("Block Hidden Numbers") },
-            supportingContent = { Text("Automatically intercept private or restricted caller IDs.") },
+            headlineContent = { Text(stringResource(R.string.block_all_calls)) },
+            supportingContent = { Text(stringResource(R.string.block_all_calls_desc)) },
+            trailingContent = { Switch(checked = state.blockAllCalls, onCheckedChange = { onEvent(CallBlockerEvent.ToggleBlockAll(it)) }) }
+        )
+        HorizontalDivider(thickness = 0.5.dp)
+
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.block_hidden_numbers)) },
+            supportingContent = { Text(stringResource(R.string.block_hidden_numbers_desc)) },
             trailingContent = { Switch(checked = state.blockHiddenNumbers, onCheckedChange = { onEvent(CallBlockerEvent.ToggleBlockHidden(it)) }) }
         )
         HorizontalDivider(thickness = 0.5.dp)
 
         ListItem(
-            headlineContent = { Text("Block Unsaved Contacts") },
-            supportingContent = { Text("Only allow numbers saved in your phone book.") },
+            headlineContent = { Text(stringResource(R.string.block_unsaved_contacts)) },
+            supportingContent = { Text(stringResource(R.string.block_unsaved_contacts_desc)) },
             trailingContent = {
                 Switch(
                     checked = state.blockUnsavedContacts,
@@ -69,7 +79,7 @@ fun CallBlockerSettingsTab(
 
         // INTERCEPTION METHOD SECTION
         Text(
-            text = "Interception Behavior",
+            text = stringResource(R.string.interception_behavior),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = Dimens.MD, top = Dimens.MD, bottom = Dimens.XS)
@@ -96,7 +106,7 @@ fun CallBlockerSettingsTab(
                     containerColor = if (isOff) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = if (isOff) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            ) { Text("Off") }
+            ) { Text(stringResource(R.string.mode_off)) }
 
             Button(
                 onClick = {
@@ -108,7 +118,7 @@ fun CallBlockerSettingsTab(
                     containerColor = if (isSilence) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = if (isSilence) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            ) { Text("Silence") }
+            ) { Text(stringResource(R.string.mode_silence)) }
 
             Button(
                 onClick = {
@@ -120,7 +130,7 @@ fun CallBlockerSettingsTab(
                     containerColor = if (isDisallow) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = if (isDisallow) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            ) { Text("Disallow") }
+            ) { Text(stringResource(R.string.mode_disallow)) }
         }
         HorizontalDivider(thickness = 0.5.dp)
 
@@ -128,8 +138,8 @@ fun CallBlockerSettingsTab(
         AnimatedVisibility(visible = state.disallowCall) {
             Column {
                 ListItem(
-                    headlineContent = { Text("Reject Call") },
-                    supportingContent = { Text("Hang up as soon as call arrives.") },
+                    headlineContent = { Text(stringResource(R.string.reject_call)) },
+                    supportingContent = { Text(stringResource(R.string.reject_call_desc)) },
                     trailingContent = {
                         Switch(
                             checked = state.rejectCall,
@@ -144,12 +154,12 @@ fun CallBlockerSettingsTab(
 
         // GLOBAL: Skip Notification (Appears for both Silence/Disallow)
         ListItem(
-            headlineContent = { Text("Skip System Notification") },
-            supportingContent = { Text("Prevent showing an 'Interception' alert.") },
+            headlineContent = { Text(stringResource(R.string.skip_system_notif)) },
+            supportingContent = { Text(stringResource(R.string.skip_system_notif_desc)) },
             trailingContent = {
                 Switch(
                     checked = state.skipNotif,
-                    enabled = !isOff, // Greyed out if "Off" is selected
+                    enabled = !isOff,
                     onCheckedChange = { onEvent(CallBlockerEvent.ToggleSkipNotif(it)) }
                 )
             }
@@ -158,29 +168,29 @@ fun CallBlockerSettingsTab(
 
         // DATA MANAGEMENT SECTION
         Text(
-            text = "Data Management",
+            text = stringResource(R.string.data_management),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = Dimens.MD, top = Dimens.MD, bottom = Dimens.XS)
         )
 
         ListItem(
-            headlineContent = { Text("Export Rules") },
-            supportingContent = { Text("Save your blocklist and whitelist to a file.") },
+            headlineContent = { Text(stringResource(R.string.export_rules)) },
+            supportingContent = { Text(stringResource(R.string.export_rules_desc)) },
             modifier = Modifier.clickable { onEvent(CallBlockerEvent.ExportRules) }
         )
         HorizontalDivider(thickness = 0.5.dp)
 
         ListItem(
-            headlineContent = { Text("Import Rules") },
-            supportingContent = { Text("Load rules from a previously exported file.") },
+            headlineContent = { Text(stringResource(R.string.import_rules)) },
+            supportingContent = { Text(stringResource(R.string.import_rules_desc)) },
             modifier = Modifier.clickable { onEvent(CallBlockerEvent.ImportRules(android.net.Uri.EMPTY)) }
         )
         HorizontalDivider(thickness = 0.5.dp)
 
         ListItem(
-            headlineContent = { Text("Clear All Rules", color = MaterialTheme.colorScheme.error) },
-            supportingContent = { Text("Permanently delete all blocklist and whitelist entries.") },
+            headlineContent = { Text(stringResource(R.string.clear_all_rules), color = MaterialTheme.colorScheme.error) },
+            supportingContent = { Text(stringResource(R.string.clear_all_rules_desc)) },
             modifier = Modifier.clickable { onEvent(CallBlockerEvent.ClearAllRules) },
             trailingContent = { Icon(Icons.Default.Warning, contentDescription = "Warning", tint = MaterialTheme.colorScheme.error) }
         )

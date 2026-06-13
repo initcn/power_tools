@@ -8,6 +8,7 @@ data class VaultUiState(
     val isBiometricEnabled: Boolean = false,
     val isUnlocked: Boolean = false,
     val isRotatingKey: Boolean = false,
+    val isKeyRotationProcessing: Boolean = false,
     val showDeleteDialog: Boolean = false,
     val fileToDelete: VaultFileEntity? = null,
     val pinInput: String = "",

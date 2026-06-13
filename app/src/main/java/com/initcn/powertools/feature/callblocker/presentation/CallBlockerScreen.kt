@@ -37,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.initcn.powertools.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -127,7 +129,7 @@ fun CallBlockerScreen(
     var prefillNumber by remember { mutableStateOf("") }
     var prefillType by remember { mutableStateOf(RuleType.BLOCKLIST_EXACT) }
 
-    PowerToolScaffold(title = "Call Blocker") { paddingValues ->
+    PowerToolScaffold(title = stringResource(R.string.call_blocker)) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
 
             // 2. The Special System Role UI (Non-blocking warning card)

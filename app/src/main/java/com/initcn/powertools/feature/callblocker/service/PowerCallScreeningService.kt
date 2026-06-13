@@ -30,25 +30,22 @@ class PowerCallScreeningService : CallScreeningService() {
     @Inject
     lateinit var prefs: CallBlockerPrefs
 
-    // Instantiate your pure, tested domain logic
     private val evaluator = CallEvaluator()
-
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onScreenCall(callDetails: Call.Details) {
         val phoneNumber = callDetails.handle?.schemeSpecificPart ?: ""
         val isHidden = phoneNumber.isBlank()
 
-        // ALWAYS verify the permission exists at the exact moment a call comes in
         val hasContactsPermission = ContextCompat.checkSelfPermission(
             this, Manifest.permission.READ_CONTACTS
         ) == PackageManager.PERMISSION_GRANTED
 
         serviceScope.launch {
-            // Only try to check the contact database if the permission is currently granted
-            val isSaved = if (!isHidden && hasContactsPermission) isContactSaved(phoneNumber) else false
+            // Fetch the actual contact name instead of just a true/false boolean
+            val contactName = if (!isHidden && hasContactsPermission) getContactName(phoneNumber) else null
+            val isSaved = contactName != null
 
-            // Capture the specific CallResult object
             val result = evaluator.evaluateCall(
                 incomingNumber = phoneNumber,
                 isSavedContact = isSaved,
@@ -57,13 +54,13 @@ class PowerCallScreeningService : CallScreeningService() {
                 exactBlocklist = dao.getExactBlocklistSync(),
                 regexBlocklist = dao.getRegexBlocklistSync(),
                 blockHiddenPref = prefs.isBlockHiddenEnabled(),
-                // FAILSAFE: Force the setting to false if the permission was revoked
-                blockUnsavedPref = prefs.isBlockUnsavedEnabled() && hasContactsPermission
+                blockUnsavedPref = prefs.isBlockUnsavedEnabled() && hasContactsPermission,
+                blockAllPref = prefs.isBlockAllEnabled()
             )
 
-            // Use Kotlin's 'when' statement to cleanly handle the result
             when (result) {
-                is CallResult.Block -> blockCall(callDetails, result.reason) // Passes the exact reason!
+                // Pass the contactName down to the blockCall method
+                is CallResult.Block -> blockCall(callDetails, result.reason, contactName)
                 is CallResult.Allow -> allowCall(callDetails)
             }
         }
@@ -79,15 +76,13 @@ class PowerCallScreeningService : CallScreeningService() {
         respondToCall(callDetails, response)
     }
 
-    private fun blockCall(callDetails: Call.Details, reason: String) {
+    private fun blockCall(callDetails: Call.Details, reason: String, contactName: String?) {
         val disallow = prefs.isDisallowEnabled()
         val reject = prefs.isRejectEnabled()
         val skipNotif = prefs.isSkipNotifEnabled()
         val silence = prefs.isSilenceEnabled()
 
         val responseBuilder = CallResponse.Builder()
-
-        // Determine the dynamic action string for the notification
         var actionTaken = "Blocked"
 
         if (disallow) {
@@ -108,11 +103,18 @@ class PowerCallScreeningService : CallScreeningService() {
 
         if (!skipNotif) {
             val phoneNumber = callDetails.handle?.schemeSpecificPart ?: "Unknown Number"
-            showBlockedCallNotification(phoneNumber, reason, actionTaken)
+            // Use the contact name if available, otherwise fallback to the raw phone number
+            val displayName = contactName ?: phoneNumber
+            showBlockedCallNotification(phoneNumber, displayName, reason, actionTaken)
         }
     }
 
-    private fun showBlockedCallNotification(phoneNumber: String, reason: String, actionTaken: String) {
+    private fun showBlockedCallNotification(
+        phoneNumber: String,
+        displayName: String,
+        reason: String,
+        actionTaken: String
+    ) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "powertools_call_blocker"
 
@@ -126,19 +128,20 @@ class PowerCallScreeningService : CallScreeningService() {
         notificationManager.createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelId)
-            // Note: Change this icon to your app's actual drawable icon if necessary!
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Call $actionTaken") // e.g., "Call Silenced" or "Call Disallowed"
-            .setContentText("$actionTaken $phoneNumber ($reason)") // e.g., "Silenced 1234567890 (Exact Match)"
+            .setSmallIcon(com.initcn.powertools.R.drawable.ic_notification)
+            .setContentTitle("Call $actionTaken")
+            // Display the resolved name in the notification body
+            .setContentText("$actionTaken $displayName ($reason)")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .build()
 
-        // Use a unique ID based on the phone number so multiple blocked calls show up separately
+        // We still use the raw phoneNumber for the ID so multiple calls from the same number stack cleanly
         notificationManager.notify(phoneNumber.hashCode(), notification)
     }
 
-    private fun isContactSaved(phoneNumber: String): Boolean {
+    // Swapped isContactSaved for getContactName to retrieve the actual string
+    private fun getContactName(phoneNumber: String): String? {
         try {
             val uri = Uri.withAppendedPath(
                 ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
@@ -151,11 +154,13 @@ class PowerCallScreeningService : CallScreeningService() {
                 null,
                 null
             )?.use { cursor ->
-                return cursor.count > 0
+                if (cursor.moveToFirst()) {
+                    return cursor.getString(0)
+                }
             }
         } catch (_: Exception) {
-            return false
+            return null
         }
-        return false
+        return null
     }
 }

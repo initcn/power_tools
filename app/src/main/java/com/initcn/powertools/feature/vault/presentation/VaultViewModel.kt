@@ -41,6 +41,9 @@ class VaultViewModel @Inject constructor(
         return vaultRoot?.findFile("master.key.blob")?.exists() == true
     }
 
+    // Holds the plaintext PIN in RAM only while the vault is actively unlocked
+    private var activeSessionPin: String? = null
+
     private val _uiState = MutableStateFlow(
         VaultUiState(
             isLoading = true, // Start in loading state
@@ -90,6 +93,7 @@ class VaultViewModel @Inject constructor(
             is VaultEvent.LockVault -> {
                 VaultSessionManager.lock()
                 vaultManager.lockVault(context) // Passed context to notify OS
+                activeSessionPin = null // Wipe it from memory
                 _uiState.update { it.copy(pinInput = "", pinConfirmInput = "", isRotatingKey = false) }
             }
             is VaultEvent.SetupVault -> setupVault()
@@ -144,6 +148,7 @@ class VaultViewModel @Inject constructor(
             return
         }
         VaultSessionManager.setupVault(context, pin)
+        activeSessionPin = pin // Save to RAM for session
         vaultManager.createEscrowBackup(context, root, pin)
         _uiState.update { it.copy(pinInput = "", pinConfirmInput = "") }
     }
@@ -155,6 +160,7 @@ class VaultViewModel @Inject constructor(
             val success = vaultManager.initializeVault(context, root, vaultDao, pin)
             if (success) {
                 VaultSessionManager.setupVault(context, pin)
+                activeSessionPin = pin // Save to RAM for session
                 _uiState.update { it.copy(pinInput = "", pinConfirmInput = "") }
             } else {
                 _uiState.update { it.copy(errorMessage = "Invalid PIN.") }
@@ -169,9 +175,11 @@ class VaultViewModel @Inject constructor(
             if (VaultSessionManager.verifyAndUnlock(context, pin)) {
                 val success = vaultManager.initializeVault(context, root, vaultDao, pin)
                 if (success) {
+                    activeSessionPin = pin // Save to RAM for session
                     _uiState.update { it.copy(pinInput = "", errorMessage = null) }
                 } else {
                     VaultSessionManager.lock()
+                    activeSessionPin = null
                     _uiState.update { it.copy(errorMessage = "Vault initialization failed.") }
                 }
             } else {
@@ -193,6 +201,7 @@ class VaultViewModel @Inject constructor(
 
                     val success = vaultManager.initializeVault(context, root, vaultDao, decryptedPin)
                     if (success && VaultSessionManager.verifyAndUnlock(context, decryptedPin)) {
+                        activeSessionPin = decryptedPin // Save to RAM for session
                         _uiState.update { it.copy(pinInput = decryptedPin) }
                     } else {
                         _uiState.update { it.copy(errorMessage = "Biometric recovery failed.") }
@@ -207,15 +216,15 @@ class VaultViewModel @Inject constructor(
 
     private fun enableBiometrics() {
         try {
-            // Fetch the actual PIN from SharedPreferences instead of the empty UI state
-            val savedPin = VaultSessionManager.getSavedPin(context)
-            if (savedPin == null) {
-                _uiState.update { it.copy(errorMessage = "Failed to retrieve PIN for biometrics.") }
+            // Pull the PIN securely from our ephemeral RAM variable
+            val activePin = activeSessionPin
+            if (activePin.isNullOrBlank()) {
+                _uiState.update { it.copy(errorMessage = "Active PIN missing from memory. Please lock and unlock the vault to enable biometrics.") }
                 return
             }
 
             val cipher = BiometricKeyManager.getEncryptionCipher()
-            val encryptedBytes = cipher.doFinal(savedPin.toByteArray(Charsets.UTF_8))
+            val encryptedBytes = cipher.doFinal(activePin.toByteArray(Charsets.UTF_8))
 
             VaultSessionManager.enableBiometrics(
                 context,
@@ -232,11 +241,25 @@ class VaultViewModel @Inject constructor(
     private fun rotateMasterKey() {
         val newPin = _uiState.value.newPinInput
         val root = vaultRoot ?: return
+
+        // 1. Show the processing indicator inside the dialog
+        _uiState.update { it.copy(isKeyRotationProcessing = true, errorMessage = null) }
+
         viewModelScope.launch(Dispatchers.IO) {
             val success = vaultManager.rotateMasterVaultKey(context, root, newPin)
             withContext(Dispatchers.Main) {
-                if (success) _uiState.update { it.copy(isRotatingKey = false, newPinInput = "", pinInput = newPin) }
-                else _uiState.update { it.copy(errorMessage = "Failed to rotate key.") }
+                if (success) {
+                    activeSessionPin = newPin // Update RAM session
+                    // 2. Hide dialog and processing state on success
+                    _uiState.update {
+                        it.copy(isRotatingKey = false, isKeyRotationProcessing = false, newPinInput = "", pinInput = newPin, errorMessage = "Master Password updated!")
+                    }
+                } else {
+                    // 3. Keep dialog open but stop processing to show the error
+                    _uiState.update {
+                        it.copy(isKeyRotationProcessing = false, errorMessage = "Failed to rotate key.")
+                    }
+                }
             }
         }
     }
@@ -249,6 +272,7 @@ class VaultViewModel @Inject constructor(
             // Clear all session preferences and state flows if deletion succeeds
             if (success) {
                 VaultSessionManager.factoryReset(context)
+                activeSessionPin = null // Wipe from RAM
             }
 
             withContext(Dispatchers.Main) {

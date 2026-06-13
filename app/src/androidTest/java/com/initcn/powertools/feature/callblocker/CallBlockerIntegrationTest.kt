@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.initcn.powertools.feature.callblocker.data.CallBlockerDatabase
 import com.initcn.powertools.feature.callblocker.data.CallBlockerPrefs
 import com.initcn.powertools.feature.callblocker.data.CallRuleDao
 import com.initcn.powertools.feature.callblocker.data.CallRuleEntity
@@ -21,7 +22,7 @@ import org.junit.runner.RunWith
 class CallBlockerIntegrationTest {
 
     private lateinit var context: Context
-    private lateinit var db: CallRuleDatabase
+    private lateinit var db: CallBlockerDatabase
     private lateinit var dao: CallRuleDao
     private lateinit var prefs: CallBlockerPrefs
     private lateinit var evaluator: CallEvaluator
@@ -33,14 +34,13 @@ class CallBlockerIntegrationTest {
         // 1. Spin up an isolated, in-memory database that wipes itself after the test
         db = Room.inMemoryDatabaseBuilder(
             context,
-            CallRuleDatabase::class.java
+            CallBlockerDatabase::class.java
         ).allowMainThreadQueries().build()
-        dao = db.callRuleDao() // Adjust to your actual DAO accessor
+        dao = db.callRuleDao()
 
-        // 2. Setup real SharedPreferences strictly for this test
-        val sharedPrefs = context.getSharedPreferences("test_call_blocker_prefs", Context.MODE_PRIVATE)
-        sharedPrefs.edit().clear().commit()
-        prefs = CallBlockerPrefs(sharedPrefs)
+        // 2. Clear the actual SharedPreferences used by the app to ensure a clean test state
+        context.getSharedPreferences("call_blocker_prefs", Context.MODE_PRIVATE).edit().clear().commit()
+        prefs = CallBlockerPrefs(context)
 
         // 3. Initialize the core evaluator
         evaluator = CallEvaluator()
@@ -68,7 +68,8 @@ class CallBlockerIntegrationTest {
             exactBlocklist = dao.getExactBlocklistSync(),
             regexBlocklist = dao.getRegexBlocklistSync(),
             blockHiddenPref = prefs.isBlockHiddenEnabled(),
-            blockUnsavedPref = prefs.isBlockUnsavedEnabled()
+            blockUnsavedPref = prefs.isBlockUnsavedEnabled(),
+            blockAllPref = prefs.isBlockAllEnabled()
         )
 
         // Assert
@@ -91,7 +92,8 @@ class CallBlockerIntegrationTest {
             exactBlocklist = dao.getExactBlocklistSync(),
             regexBlocklist = dao.getRegexBlocklistSync(),
             blockHiddenPref = prefs.isBlockHiddenEnabled(),
-            blockUnsavedPref = prefs.isBlockUnsavedEnabled()
+            blockUnsavedPref = prefs.isBlockUnsavedEnabled(),
+            blockAllPref = prefs.isBlockAllEnabled()
         )
 
         // Assert
@@ -101,7 +103,7 @@ class CallBlockerIntegrationTest {
     @Test
     fun e2e_incomingCall_hiddenNumber_blockedWhenSettingEnabled() = runBlocking {
         // Arrange: User toggles "Block Hidden Numbers" in the UI
-        prefs.setBlockHidden(true)
+        prefs.setBlockHiddenEnabled(true)
         val hiddenNumber = ""
 
         // Act
@@ -113,7 +115,8 @@ class CallBlockerIntegrationTest {
             exactBlocklist = dao.getExactBlocklistSync(),
             regexBlocklist = dao.getRegexBlocklistSync(),
             blockHiddenPref = prefs.isBlockHiddenEnabled(),
-            blockUnsavedPref = prefs.isBlockUnsavedEnabled()
+            blockUnsavedPref = prefs.isBlockUnsavedEnabled(),
+            blockAllPref = prefs.isBlockAllEnabled()
         )
 
         // Assert
@@ -123,7 +126,7 @@ class CallBlockerIntegrationTest {
     @Test
     fun e2e_failsafe_unsavedContact_notBlockedIfPermissionRevoked() = runBlocking {
         // Arrange: User toggles "Block Unsaved Contacts" ON, but later revokes the permission via Android Settings
-        prefs.setBlockUnsaved(true)
+        prefs.setBlockUnsavedEnabled(true)
         val incomingNumber = "1234567890"
 
         // Simulate the failsafe logic from PowerCallScreeningService.kt
@@ -138,9 +141,9 @@ class CallBlockerIntegrationTest {
             exactBlocklist = dao.getExactBlocklistSync(),
             regexBlocklist = dao.getRegexBlocklistSync(),
             blockHiddenPref = prefs.isBlockHiddenEnabled(),
-
             // This is the critical failsafe injection you built
-            blockUnsavedPref = prefs.isBlockUnsavedEnabled() && hasContactsPermission
+            blockUnsavedPref = prefs.isBlockUnsavedEnabled() && hasContactsPermission,
+            blockAllPref = prefs.isBlockAllEnabled()
         )
 
         // Assert
@@ -148,5 +151,46 @@ class CallBlockerIntegrationTest {
             "CRITICAL: App must allow call if Contacts permission was revoked to prevent blocking all calls!",
             result is CallResult.Allow
         )
+    }
+
+    @Test
+    fun e2e_incomingCall_blockAll_trapsEverythingExceptWhitelist() = runBlocking {
+        // Arrange: User turns on "Block All" but has a whitelisted contact
+        prefs.setBlockAllEnabled(true)
+
+        val doctorNumber = "5551234"
+        val randomSpammer = "9998887777"
+
+        dao.insertRule(CallRuleEntity(pattern = doctorNumber, ruleType = RuleType.WHITELIST))
+
+        // Act: Evaluate random spammer
+        val spamResult = evaluator.evaluateCall(
+            incomingNumber = randomSpammer,
+            isSavedContact = true, // Even if they are saved!
+            isHiddenNumber = false,
+            whitelist = dao.getWhitelistSync(),
+            exactBlocklist = dao.getExactBlocklistSync(),
+            regexBlocklist = dao.getRegexBlocklistSync(),
+            blockHiddenPref = prefs.isBlockHiddenEnabled(),
+            blockUnsavedPref = prefs.isBlockUnsavedEnabled(),
+            blockAllPref = prefs.isBlockAllEnabled()
+        )
+
+        // Act: Evaluate whitelisted doctor
+        val doctorResult = evaluator.evaluateCall(
+            incomingNumber = doctorNumber,
+            isSavedContact = false,
+            isHiddenNumber = false,
+            whitelist = dao.getWhitelistSync(),
+            exactBlocklist = dao.getExactBlocklistSync(),
+            regexBlocklist = dao.getRegexBlocklistSync(),
+            blockHiddenPref = prefs.isBlockHiddenEnabled(),
+            blockUnsavedPref = prefs.isBlockUnsavedEnabled(),
+            blockAllPref = prefs.isBlockAllEnabled()
+        )
+
+        // Assert
+        assertTrue("Spam must be blocked by Block All", spamResult is CallResult.Block)
+        assertTrue("Whitelist MUST override Block All", doctorResult is CallResult.Allow)
     }
 }

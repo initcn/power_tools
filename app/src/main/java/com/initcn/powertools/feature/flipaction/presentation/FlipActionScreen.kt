@@ -1,20 +1,41 @@
 package com.initcn.powertools.feature.flipaction.presentation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.initcn.powertools.core.permissions.RequiredPermission
@@ -23,7 +44,7 @@ import com.initcn.powertools.core.ui.components.FeaturePermissionGuard
 import com.initcn.powertools.core.ui.components.PowerToolScaffold
 import com.initcn.powertools.feature.flipaction.domain.FlipActionManager
 import com.initcn.powertools.feature.flipaction.service.FlipSensorService
-import java.util.Locale // Added for safe string formatting
+import java.util.Locale
 
 @Composable
 fun FlipActionRoute(
@@ -227,9 +248,10 @@ fun isIgnoringBatteryOptimizations(context: Context): Boolean {
     return powerManager.isIgnoringBatteryOptimizations(context.packageName)
 }
 
+@SuppressLint("BatteryLife")
 fun requestBatteryExemption(context: Context) {
-    // FIX: Using the Play Store compliant intent.
-    // This directs them to the settings menu rather than popping up an immediate dialog window.
-    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+        data = "package:${context.packageName}".toUri()
+    }
     context.startActivity(intent)
 }

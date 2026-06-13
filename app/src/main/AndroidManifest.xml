@@ -29,6 +29,8 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
             android:theme="@style/Theme.PowerTools"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -43,6 +45,8 @@
             android:enabled="true"
             android:exported="true"
             android:grantUriPermissions="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
             android:permission="android.permission.MANAGE_DOCUMENTS">
             <intent-filter>
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />

@@ -17,6 +17,8 @@ class CallBlockerPrefs @Inject constructor(
         private const val KEY_BLOCK_HIDDEN = "block_hidden_numbers"
         private const val KEY_BLOCK_UNSAVED = "block_unsaved_contacts"
 
+        private const val KEY_BLOCK_ALL = "block_all_calls"
+
         // Behaviors
         private const val KEY_DISALLOW_CALL = "behavior_disallow_call"
         private const val KEY_REJECT_CALL = "behavior_reject_call"
@@ -27,6 +29,12 @@ class CallBlockerPrefs @Inject constructor(
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     // Filters
+
+    fun isBlockAllEnabled(): Boolean = prefs.getBoolean(KEY_BLOCK_ALL, false)
+
+    fun setBlockAllEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_BLOCK_ALL, enabled) }
+    }
 
     fun isBlockHiddenEnabled(): Boolean = prefs.getBoolean(KEY_BLOCK_HIDDEN, false)
 

@@ -16,10 +16,13 @@ object VaultSessionManager {
     private const val VAULT_PREFS = "vault_session_secure_prefs"
     private const val KEY_IS_SETUP = "vault_is_setup_completed"
     private const val KEY_VAULT_PIN = "vault_user_hashed_pin"
+    private const val KEY_PIN_SALT = "vault_pin_salt"
 
     private const val KEY_BIO_ENABLED = "vault_bio_enabled"
     private const val KEY_ENCRYPTED_PIN = "vault_encrypted_pin"
     private const val KEY_BIO_IV = "vault_bio_iv"
+
+    private const val ITERATIONS = 100_000 // High enough to slow down brute force
 
     private val _isVaultUnlocked = MutableStateFlow(false)
     val isVaultUnlocked: StateFlow<Boolean> = _isVaultUnlocked.asStateFlow()
@@ -29,6 +32,14 @@ object VaultSessionManager {
 
     private val _isBiometricEnabled = MutableStateFlow(false)
     val isBiometricEnabled: StateFlow<Boolean> = _isBiometricEnabled.asStateFlow()
+
+    // Add this private helper function to hash the PIN
+    private fun hashPin(pin: String, salt: ByteArray): String {
+        val factory = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val spec = javax.crypto.spec.PBEKeySpec(pin.toCharArray(), salt, ITERATIONS, 256)
+        val hashBytes = factory.generateSecret(spec).encoded
+        return android.util.Base64.encodeToString(hashBytes, android.util.Base64.NO_WRAP)
+    }
 
     // We use your existing constants to properly sync the memory with the disk on app launch
     // Add this to VaultSessionManager.kt
@@ -46,10 +57,15 @@ object VaultSessionManager {
     }
 
     fun setupVault(context: Context, pin: String) {
+        val salt = ByteArray(16).apply { java.security.SecureRandom().nextBytes(this) }
+        val hashedPin = hashPin(pin, salt)
+        val saltBase64 = android.util.Base64.encodeToString(salt, android.util.Base64.NO_WRAP)
+
         val prefs = context.getSharedPreferences(VAULT_PREFS, Context.MODE_PRIVATE)
         prefs.edit().apply {
             putBoolean(KEY_IS_SETUP, true)
-            putString(KEY_VAULT_PIN, pin)
+            putString(KEY_VAULT_PIN, hashedPin)
+            putString(KEY_PIN_SALT, saltBase64)
             apply()
         }
         _isVaultSetup.value = true
@@ -58,9 +74,15 @@ object VaultSessionManager {
 
     fun verifyAndUnlock(context: Context, pin: String): Boolean {
         val prefs = context.getSharedPreferences(VAULT_PREFS, Context.MODE_PRIVATE)
-        val savedPin = prefs.getString(KEY_VAULT_PIN, null)
+        val savedHashedPin = prefs.getString(KEY_VAULT_PIN, null)
+        val savedSaltBase64 = prefs.getString(KEY_PIN_SALT, null)
 
-        return if (pin == savedPin) {
+        if (savedHashedPin == null || savedSaltBase64 == null) return false
+
+        val salt = android.util.Base64.decode(savedSaltBase64, android.util.Base64.NO_WRAP)
+        val attemptHash = hashPin(pin, salt)
+
+        return if (attemptHash == savedHashedPin) {
             _isVaultUnlocked.value = true
             true
         } else {
@@ -96,11 +118,6 @@ object VaultSessionManager {
             prefs.getString(KEY_ENCRYPTED_PIN, null),
             prefs.getString(KEY_BIO_IV, null)
         )
-    }
-
-    fun getSavedPin(context: Context): String? {
-        val prefs = context.getSharedPreferences(VAULT_PREFS, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_VAULT_PIN, null)
     }
 
     fun lock() {

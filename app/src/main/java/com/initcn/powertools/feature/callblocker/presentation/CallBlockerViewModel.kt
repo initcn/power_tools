@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.provider.CallLog
+import android.provider.ContactsContract
 import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,6 +42,7 @@ class CallBlockerViewModel @Inject constructor(
         CallBlockerUiState(
             blockHiddenNumbers = callBlockerPrefs.isBlockHiddenEnabled(),
             blockUnsavedContacts = callBlockerPrefs.isBlockUnsavedEnabled(),
+            blockAllCalls = callBlockerPrefs.isBlockAllEnabled(),
             disallowCall = callBlockerPrefs.isDisallowEnabled(),
             rejectCall = callBlockerPrefs.isRejectEnabled(),
             skipNotif = callBlockerPrefs.isSkipNotifEnabled(),
@@ -70,9 +72,12 @@ class CallBlockerViewModel @Inject constructor(
         }
     }
 
-    // Single MVI entry point for all UI interactions
     fun onEvent(event: CallBlockerEvent) {
         when (event) {
+            is CallBlockerEvent.ToggleBlockAll -> {
+                callBlockerPrefs.setBlockAllEnabled(event.enabled)
+                _uiState.update { it.copy(blockAllCalls = event.enabled) }
+            }
             is CallBlockerEvent.ToggleBlockHidden -> {
                 callBlockerPrefs.setBlockHiddenEnabled(event.enabled)
                 _uiState.update { it.copy(blockHiddenNumbers = event.enabled) }
@@ -108,7 +113,7 @@ class CallBlockerViewModel @Inject constructor(
             is CallBlockerEvent.ExportRules -> exportRules()
             is CallBlockerEvent.ImportRules -> importRules(event.uri)
             is CallBlockerEvent.FetchRecentCalls -> fetchRecentCalls()
-            is CallBlockerEvent.ClearAllRules -> clearAllRules() // Added missing branch
+            is CallBlockerEvent.ClearAllRules -> clearAllRules()
         }
     }
 
@@ -170,6 +175,9 @@ class CallBlockerViewModel @Inject constructor(
             val logs = mutableListOf<CallLogEntry>()
             val projection = arrayOf(CallLog.Calls.NUMBER, CallLog.Calls.CACHED_NAME, CallLog.Calls.DATE, CallLog.Calls.TYPE)
 
+            // Check if we have contacts permission to do a manual lookup
+            val hasContactsPermission = PermissionChecker.hasContactsAccess(context)
+
             try {
                 context.contentResolver.query(
                     CallLog.Calls.CONTENT_URI, projection, null, null, "${CallLog.Calls.DATE} DESC"
@@ -180,10 +188,18 @@ class CallBlockerViewModel @Inject constructor(
                     val typeIndex = cursor.getColumnIndexOrThrow(CallLog.Calls.TYPE)
 
                     while (cursor.moveToNext() && logs.size < 50) {
+                        val number = cursor.getString(numberIndex) ?: "Unknown"
+                        var name = cursor.getString(nameIndex)
+
+                        // Forcefully check contacts if Android failed to cache the name
+                        if (name.isNullOrBlank() && hasContactsPermission && number != "Unknown") {
+                            name = getContactName(number)
+                        }
+
                         logs.add(
                             CallLogEntry(
-                                number = cursor.getString(numberIndex) ?: "Unknown",
-                                name = cursor.getString(nameIndex),
+                                number = number,
+                                name = name?.takeIf { it.isNotBlank() },
                                 date = cursor.getLong(dateIndex),
                                 type = cursor.getInt(typeIndex)
                             )
@@ -198,6 +214,30 @@ class CallBlockerViewModel @Inject constructor(
                 _uiState.update { it.copy(recentCalls = logs) }
             }
         }
+    }
+
+    // Helper function to actively query the contacts database by phone number
+    private fun getContactName(phoneNumber: String): String? {
+        try {
+            val uri = Uri.withAppendedPath(
+                ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                Uri.encode(phoneNumber)
+            )
+            context.contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    return cursor.getString(0)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
     }
 
     private fun clearAllRules() {

@@ -38,14 +38,31 @@ class DownloadsViewModel @Inject constructor(
             } else {
                 filesReadyTemplate.format(operations.size)
             }
-            _uiState.update { it.copy(statusMessage = newMessage) }
+            _uiState.update {
+                it.copy(
+                    liveFiles = operations,
+                    moveLogs = emptyList(),
+                    hasScanned = true, // Unlock the list view
+                    statusMessage = newMessage
+                )
+            }
         }
     }
 
     private fun organizeDownloads(filesMovedTemplate: String) {
+        _uiState.update { it.copy(isOrganizing = true, moveLogs = emptyList()) }
         viewModelScope.launch(Dispatchers.IO) {
-            val movedCount = downloadsOrganizer.organize()
-            _uiState.update { it.copy(statusMessage = filesMovedTemplate.format(movedCount)) }
+            val movedCount = downloadsOrganizer.organize { logMsg ->
+                _uiState.update { it.copy(moveLogs = it.moveLogs + logMsg) }
+            }
+
+            _uiState.update {
+                it.copy(
+                    isOrganizing = false,
+                    statusMessage = filesMovedTemplate.format(movedCount),
+                    liveFiles = downloadsOrganizer.preview() // Refresh the view once done
+                )
+            }
         }
     }
 }

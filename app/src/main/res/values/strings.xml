@@ -5,7 +5,7 @@
 
     <!-- DNS -->
     <string name="dns_switcher">DNS Switcher</string>
-    <string name="dns_description">Switch Android Private DNS providers instantly.</string>
+    <string name="dns_description">Switch Android Private DNS providers.</string>
     <string name="apply_dns">Apply DNS</string>
     <string name="dns_applied">%1$s applied.</string>
     <string name="dns_apply_failed">Failed to apply DNS settings.</string>
@@ -13,12 +13,8 @@
     <string name="custom_dns_placeholder">dns.example.com</string>
     <string name="disable_private_dns">Disable Private DNS</string>
     <string name="automatic_dns_mode">Use Android automatic mode</string>
-
     <string name="saved_dns_providers">Saved DNS Providers</string>
-    <string name="delete">Delete</string>
-    <string name="adb_permission_required">ADB Permission Required</string>
-    <string name="dns_permission_description">Grant WRITE_SECURE_SETTINGS before using DNS controls.</string>
-    <string name="adb_grant_command">adb shell pm grant com.initcn.powertools android.permission.WRITE_SECURE_SETTINGS</string>
+
     <!-- Doze -->
     <string name="screen_doze">Screen Doze</string>
     <string name="screen_timeout_description">Select a screen timeout duration.</string>
@@ -27,7 +23,7 @@
     <string name="timeout_failed">Failed to apply timeout.</string>
     <string name="grant_modify_settings">Grant Modify System Settings permission first.</string>
 
-    <!-- Downloads -->
+    <!-- Downloads Organizer -->
     <string name="downloads_organizer">Downloads Organizer</string>
     <string name="downloads_description">Organize files in Downloads into category folders.</string>
     <string name="preview_changes">Preview Changes</string>
@@ -37,6 +33,44 @@
     <string name="downloads_files_ready">%1$d files ready to organize.</string>
     <string name="files_moved">Moved %1$d files.</string>
     <string name="all_remaining_file_types">All remaining file types</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_about">About</string>
+    <string name="move_logs">Move Logs</string>
+    <string name="pending_files">Pending Files</string>
+    <string name="organizing">Organizing…</string>
+
+    <!-- Call Blocker -->
+    <string name="call_blocker">Call Blocker</string>
+    <string name="block_triggers">Block Triggers</string>
+    <string name="block_all_calls">Block All Calls</string>
+    <string name="block_all_calls_desc">Intercept absolutely every incoming call (Whitelist overrides this).</string>
+    <string name="block_hidden_numbers">Block Hidden Numbers</string>
+    <string name="block_hidden_numbers_desc">Automatically intercept private or restricted caller IDs.</string>
+    <string name="block_unsaved_contacts">Block Unsaved Contacts</string>
+    <string name="block_unsaved_contacts_desc">Only allow numbers saved in your phone book.</string>
+    <string name="interception_behavior">Interception Behavior</string>
+    <string name="mode_off">Off</string>
+    <string name="mode_silence">Silence</string>
+    <string name="mode_disallow">Disallow</string>
+    <string name="reject_call">Reject Call</string>
+    <string name="reject_call_desc">Hang up as soon as call arrives.</string>
+    <string name="skip_system_notif">Skip System Notification</string>
+    <string name="skip_system_notif_desc">Prevent showing an \'Interception\' alert.</string>
+    <string name="data_management">Data Management</string>
+    <string name="export_rules">Export Rules</string>
+    <string name="export_rules_desc">Save your blocklist and whitelist to a file.</string>
+    <string name="import_rules">Import Rules</string>
+    <string name="import_rules_desc">Load rules from a previously exported file.</string>
+    <string name="clear_all_rules">Clear All Rules</string>
+    <string name="clear_all_rules_desc">Permanently delete all blocklist and whitelist entries.</string>
+    <string name="add_rule">Add Rule</string>
+    <string name="number_or_regex">Number or Regex</string>
+    <string name="label_optional">Label (Optional)</string>
+    <string name="rule_type">Rule Type</string>
+    <string name="block_exact">Block Exact Number</string>
+    <string name="block_regex">Block by Regex</string>
+    <string name="whitelist">Whitelist (Always Allow)</string>
+    <string name="no_recent_calls">No recent calls found.</string>
 
     <!-- Permissions -->
     <string name="powertools_setup">PowerTools Setup</string>
@@ -48,14 +82,21 @@
     <string name="adb_command_copied">ADB command copied.</string>
     <string name="tap_open_settings">Tap to open Android Settings.</string>
     <string name="tap_grant_files_access">Tap to grant Full Files Access.</string>
+    <string name="delete">Delete</string>
 
-    <!-- Vault-->
+    <!-- Vault -->
     <string name="secure_vault">Secure Vault</string>
     <string name="vault_description">Hardware-encrypted virtual storage sandbox.</string>
     <string name="setup_vault_title">Setup Your Vault</string>
-    <string name="enter_pin_pass">Enter your Master Pin/Password</string>
+    <string name="enter_pin_pass">Enter your Master Password/Password</string>
     <string name="enable_biometrics_prompt">Would you like to enable biometric unlock?</string>
     <string name="vault_locked_msg">Vault is securely locked.</string>
     <string name="error_invalid_auth">Incorrect password or PIN.</string>
+    <string name="biometric_unlock">Biometric Unlock</string>
+    <string name="biometric_unlock_desc">Use fingerprint or face ID to unlock the vault.</string>
+    <string name="change_password">Change Password</string>
+    <string name="change_password_desc">Rotate your master cryptographic key.</string>
+    <string name="delete_vault">Delete Vault</string>
+    <string name="delete_vault_desc">Permanently destroy all files and keys.</string>
 
 </resources>

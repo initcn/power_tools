@@ -24,7 +24,8 @@ class CallEvaluator {
         exactBlocklist: List<CallRuleEntity>,
         regexBlocklist: List<CallRuleEntity>,
         blockHiddenPref: Boolean,
-        blockUnsavedPref: Boolean
+        blockUnsavedPref: Boolean,
+        blockAllPref: Boolean
     ): CallResult {
         val cleanNumber = normalize(incomingNumber)
 
@@ -35,6 +36,9 @@ class CallEvaluator {
         if (isWhitelisted) return CallResult.Allow("Whitelisted Number")
 
         // Priority Two: Settings
+        if (blockAllPref) {
+            return CallResult.Block("Block All Enabled")
+        }
         if (blockHiddenPref && (isHiddenNumber || incomingNumber.isNullOrBlank())) {
             return CallResult.Block("Hidden/Restricted Caller ID")
         }

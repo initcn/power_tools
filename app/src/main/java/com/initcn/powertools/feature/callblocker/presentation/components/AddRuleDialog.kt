@@ -17,6 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.initcn.powertools.R
+import androidx.compose.ui.res.stringResource
 import com.initcn.powertools.core.theme.Dimens
 import com.initcn.powertools.core.ui.components.PowerAlertDialog
 import com.initcn.powertools.feature.callblocker.domain.RuleType
@@ -48,19 +50,19 @@ fun AddRuleDialog(
             OutlinedTextField(
                 value = pattern,
                 onValueChange = { pattern = it },
-                label = { Text("Number or Regex") },
+                label = { Text(stringResource(R.string.number_or_regex)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = label,
                 onValueChange = { label = it },
-                label = { Text("Label (Optional)") },
+                label = { Text(stringResource(R.string.label_optional)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(Dimens.XS))
-            Text("Rule Type", style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.rule_type), style = MaterialTheme.typography.labelMedium)
             Column {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -69,7 +71,7 @@ fun AddRuleDialog(
                     RadioButton(
                         selected = selectedType == RuleType.BLOCKLIST_EXACT,
                         onClick = { selectedType = RuleType.BLOCKLIST_EXACT })
-                    Text("Block Exact Number")
+                    Text(stringResource(R.string.block_exact))
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -78,7 +80,7 @@ fun AddRuleDialog(
                     RadioButton(
                         selected = selectedType == RuleType.BLOCKLIST_REGEX,
                         onClick = { selectedType = RuleType.BLOCKLIST_REGEX })
-                    Text("Block by Regex")
+                    Text(stringResource(R.string.block_regex))
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -87,7 +89,7 @@ fun AddRuleDialog(
                     RadioButton(
                         selected = selectedType == RuleType.WHITELIST,
                         onClick = { selectedType = RuleType.WHITELIST })
-                    Text("Whitelist (Always Allow)")
+                    Text(stringResource(R.string.whitelist))
                 }
             }
         }
