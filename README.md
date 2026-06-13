@@ -35,12 +35,11 @@ A lightweight, all-in-one utility app designed to give you ultimate control over
 
 ## Privacy & Permissions
 
-PowerTools is designed to work entirely on your device. **No data, call logs, or personal files are ever sent to the cloud or shared with third parties.** 
+PowerTools is designed to work entirely on your device. **No data, call logs, or personal files are ever sent to the cloud or shared with third parties.**
 
 To perform these system-level tasks, the app will ask for several permissions (like Contacts, Call Logs, and Storage access). 
 
-**Special Setup Note:**
-Because the **DNS Switcher** modifies Android system settings, it requires a special permission (`WRITE_SECURE_SETTINGS`) that cannot be granted normally. If you wish to use this specific feature, you will need to plug your phone into a computer and run a one-time ADB command provided inside the app.
+**DNS Switcher** modifies Android system settings, it requires a special permission (`WRITE_SECURE_SETTINGS`) that cannot be granted normally. If you wish to use this specific feature, you will need to plug your phone into a computer and run a one-time ADB command provided inside the app.
 
 ```sh
 adb shell pm grant com.initcn.powertools android.permission.WRITE_SECURE_SETTINGS
