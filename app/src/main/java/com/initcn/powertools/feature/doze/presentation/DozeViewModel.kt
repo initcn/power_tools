@@ -28,15 +28,12 @@ class DozeViewModel @Inject constructor(
     fun onEvent(event: DozeEvent) {
         when (event) {
             is DozeEvent.SelectLabel -> {
-                _uiState.update { it.copy(selectedLabel = event.label, statusMessage = null) }
-            }
-            is DozeEvent.SetStatusMessage -> {
-                _uiState.update { it.copy(statusMessage = event.message) }
-            }
-            is DozeEvent.ApplyTimeout -> {
-                val success = dozeManager.applyTimeout(_uiState.value.selectedLabel)
+                // Immediately apply the setting to the OS
+                val success = dozeManager.applyTimeout(event.label)
+
                 _uiState.update {
                     it.copy(
+                        selectedLabel = if (success) event.label else it.selectedLabel,
                         statusMessage = if (success) {
                             UiText.StringResource(R.string.timeout_success)
                         } else {
@@ -44,6 +41,9 @@ class DozeViewModel @Inject constructor(
                         }
                     )
                 }
+            }
+            is DozeEvent.SetStatusMessage -> {
+                _uiState.update { it.copy(statusMessage = event.message) }
             }
         }
     }

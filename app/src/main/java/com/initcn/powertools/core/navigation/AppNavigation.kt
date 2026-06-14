@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.initcn.powertools.feature.callblocker.presentation.CallBlockerRoute
+import com.initcn.powertools.feature.colorfilter.presentation.ColorFilterRoute // <-- Added Import
 import com.initcn.powertools.feature.dns.presentation.DnsRoute
 import com.initcn.powertools.feature.downloadsorganizer.presentation.DownloadsRoute
 import com.initcn.powertools.feature.doze.presentation.DozeRoute
@@ -29,6 +30,13 @@ fun AppNavigation() {
                 onToolSelected = { tool ->
                     navController.navigate(tool.route)
                 }
+            )
+        }
+
+        // ADDED: Color Filter as the second option
+        composable(route = Routes.COLOR_FILTER) {
+            ColorFilterRoute(
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -61,6 +69,7 @@ fun AppNavigation() {
         composable(route = Routes.CALL_BLOCKER) {
             CallBlockerRoute(onNavigateBack = { navController.popBackStack() })
         }
+
         composable(route = Routes.FLIP_ACTION) {
             FlipActionRoute(onNavigateBack = { navController.popBackStack() })
         }

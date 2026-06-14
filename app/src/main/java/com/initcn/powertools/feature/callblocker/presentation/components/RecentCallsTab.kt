@@ -120,8 +120,9 @@ fun RecentCallItem(
     val callIcon = when (call.type) {
         1 -> Icons.AutoMirrored.Filled.CallReceived // Incoming
         2 -> Icons.AutoMirrored.Filled.CallMade     // Outgoing
-        3 -> Icons.AutoMirrored.Filled.CallMissed   // Missed
-        5 -> Icons.Default.Block                    // Rejected/Blocked
+        3, 5 -> Icons.AutoMirrored.Filled.CallMissed // Missed, Manually Rejected
+        6 -> Icons.Default.Block // Disallowed
+
         else -> Icons.Default.Call
     }
 

@@ -34,6 +34,15 @@ class PowerCallScreeningService : CallScreeningService() {
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onScreenCall(callDetails: Call.Details) {
+        if (callDetails.callDirection == Call.Details.DIRECTION_OUTGOING) {
+            allowCall(callDetails)
+            return
+        }
+
+        if (callDetails.hasProperty(Call.Details.PROPERTY_SELF_MANAGED) || callDetails.handle?.scheme != "tel") {
+            allowCall(callDetails)
+            return
+        }
         val phoneNumber = callDetails.handle?.schemeSpecificPart ?: ""
         val isHidden = phoneNumber.isBlank()
 

@@ -89,6 +89,12 @@
     <string name="grant_modify_settings">Grant Modify System Settings permission first.</string>
 
     <!-- ============================================== -->
+    <!-- FEATURE: SCREEN COLOR                          -->
+    <!-- ============================================== -->
+    <string name="tool_color_title">Color Correction</string>
+    <string name="tool_color_desc">Grayscale and color blindness filters</string>
+
+    <!-- ============================================== -->
     <!-- FEATURE: DOWNLOADS ORGANIZER                   -->
     <!-- ============================================== -->
     <string name="downloads_organizer">Downloads Organizer</string>
